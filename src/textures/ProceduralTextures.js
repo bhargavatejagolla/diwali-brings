@@ -1,14 +1,14 @@
 /**
- * TextureGenerator — 100% Procedural High-Fidelity PBR Textures (Zero External Image Files)
- * Generates photorealistic earthenware clay, fresh marigolds, sacred rangoli mandalas,
- * polished royal marble, carved sandstone jali screens, and incandescent pyrotechnic sprites
+ * ProceduralTextures — 100% Code-Driven High-Fidelity PBR Textures (Zero External Image Files)
+ * Generates photorealistic earthenware clay, liquid ghee, fresh marigolds, sacred rangoli mandalas,
+ * polished Indian marble, carved sandstone jali screens, and incandescent spark sprites
  * in memory using HTML5 Canvas and converts them to high-performance THREE.CanvasTexture.
  */
 
 import * as THREE from 'three';
 
-export class TextureGenerator {
-  // 1. Handcrafted Indian Terracotta Clay Diya Texture with Natural Porosity & Soot
+export class ProceduralTextures {
+  // 1. Handcrafted Indian Terracotta Clay Diya Texture with Natural Porosity & Gold Inlay
   static createDiyaTexture() {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
@@ -78,7 +78,7 @@ export class TextureGenerator {
   }
 
   // 2. Liquid Ghee / Sesame Oil Texture with Meniscus and Flame Reflections
-  static createGheeLiquidTexture() {
+  static createGheeOilTexture() {
     const canvas = document.createElement('canvas');
     canvas.width = 256;
     canvas.height = 256;

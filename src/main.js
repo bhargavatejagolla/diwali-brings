@@ -1,15 +1,15 @@
 /**
  * Master Experience Orchestrator — "A Thousand Lights, One Beautiful Wish"
- * Cinematic Photorealistic Living World & Tactile Gold Foil Scratch System
- * Dedicated to Dharji Shravya — Zero Emojis, Locked 60/120 FPS
+ * Cinematic Photorealistic Living World & Pyrotechnics Engine
+ * Dedicated to Dharvi Shravya — Zero Emojis, Locked 60/120 FPS
  */
 
-import { audioSynth } from './engines/audio-synth.js';
-import { memory } from './engines/storage.js';
+import { Engine } from './core/Engine.js';
+import { audioSynth } from './audio/AudioEngine.js';
+import { memory } from './core/storage.js';
 import { haptics } from './interactions/haptics.js';
 import { breathDetector } from './interactions/breath.js';
 import { voiceTrigger } from './interactions/voice.js';
-import { ThreeMasterWorld } from './engines/three-master-world.js';
 import { gsap } from 'gsap';
 
 class ExperienceApp {
@@ -38,7 +38,7 @@ class ExperienceApp {
   init() {
     // 1. Initialize Master Real-Time 3D WebGL World Engine
     if (this.webglCanvas) {
-      this.world = new ThreeMasterWorld(this.webglCanvas);
+      this.world = new Engine(this.webglCanvas);
       this.world.start();
     }
 
@@ -155,7 +155,7 @@ class ExperienceApp {
         // Launch welcoming celebratory firework barrage
         setTimeout(() => {
           if (this.world) {
-            this.world.launchFirework(0, 23, 'gold', 'chrysanthemum');
+            this.world.launchBarrage('gold', 'willow');
             setTimeout(() => {
               this.world.launchFirework(-7, 21, 'teal', 'peacock');
               this.world.launchFirework(7, 21, 'pink', 'heart');
@@ -166,11 +166,7 @@ class ExperienceApp {
         // Voice trigger
         voiceTrigger.start(() => {
           if (this.world) {
-            this.world.launchFirework(-6, 22, 'teal', 'peacock');
-            this.world.launchFirework(6, 22, 'pink', 'heart');
-            setTimeout(() => {
-              this.world.launchFirework(0, 25, 'gold', 'willow');
-            }, 250);
+            this.world.triggerGrandFinale();
           }
         });
         break;
@@ -257,11 +253,7 @@ class ExperienceApp {
             violet: 'ring'
           };
           const type = typeMap[theme] || 'chrysanthemum';
-          this.world.launchFirework(0, 23, theme, type);
-          setTimeout(() => {
-            this.world.launchFirework(-7, 21, theme, 'chrysanthemum');
-            this.world.launchFirework(7, 21, theme, type);
-          }, 220);
+          this.world.launchBarrage(theme, type);
         }
       });
     });
@@ -277,16 +269,9 @@ class ExperienceApp {
         wishInput.value = '';
         this.renderSavedWishes();
         
-        // Launch grand celebratory fireworks barrage
+        // Launch ascending wish lantern and grand celebratory fireworks barrage
         if (this.world) {
-          this.world.launchFirework(0, 24, 'gold', 'willow');
-          setTimeout(() => {
-            this.world.launchFirework(-8, 22, 'teal', 'peacock');
-            this.world.launchFirework(8, 22, 'pink', 'heart');
-          }, 250);
-          setTimeout(() => {
-            this.world.launchFirework(0, 26, 'violet', 'ring');
-          }, 500);
+          this.world.releaseWish(text);
         }
 
         audioSynth.playStarlightChime(880);
