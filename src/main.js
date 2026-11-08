@@ -5,7 +5,6 @@
  */
 
 import { Engine } from './core/Engine.js';
-import { FallbackCanvasEngine } from './core/FallbackCanvasEngine.js';
 import { audioSynth } from './audio/AudioEngine.js';
 import { memory } from './core/storage.js';
 import { haptics } from './interactions/haptics.js';
@@ -37,23 +36,13 @@ class ExperienceApp {
   }
 
   init() {
-    // 1. Initialize Master Real-Time 3D WebGL / Fallback Engine
-    try {
-      if (this.webglCanvas) {
-        this.world = new Engine(this.webglCanvas);
-        this.world.start();
-      }
-    } catch (err) {
-      console.warn("Primary 3D engine failed, activating FallbackCanvasEngine:", err);
-      try {
-        this.world = new FallbackCanvasEngine(this.webglCanvas);
-        this.world.start();
-      } catch (err2) {
-        console.error("Critical fallback engine error:", err2);
-      }
+    // 1. Initialize Real 3D WebGL Living World
+    if (this.webglCanvas) {
+      this.world = new Engine(this.webglCanvas);
+      this.world.start();
     }
 
-    // 2. Bind DOM Events (Guaranteed to execute!)
+    // 2. Bind DOM Events
     this.bindEvents();
     this.renderSavedWishes();
 
