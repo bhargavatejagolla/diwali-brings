@@ -149,16 +149,20 @@ export class Engine {
   loop(currentTime = performance.now()) {
     if (!this.running) return;
 
-    const deltaMs = currentTime - this.lastTime;
-    this.lastTime = currentTime;
-    const dt = Math.min(Math.max(deltaMs / 16.67, 0.5), 2.0);
+    try {
+      const deltaMs = currentTime - this.lastTime;
+      this.lastTime = currentTime;
+      const dt = Math.min(Math.max(deltaMs / 16.67, 0.5), 2.0);
 
-    this.update(dt);
+      this.update(dt);
 
-    if (this.composer) {
-      this.composer.render();
-    } else {
-      this.renderer.render(this.scene, this.camera);
+      if (this.composer) {
+        this.composer.render();
+      } else {
+        this.renderer.render(this.scene, this.camera);
+      }
+    } catch (err) {
+      console.warn("Render loop frame warning:", err);
     }
 
     this.rafId = requestAnimationFrame((t) => this.loop(t));

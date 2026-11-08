@@ -5,14 +5,21 @@
 class HapticEngine {
   constructor() {
     this.supported = typeof navigator !== 'undefined' && 'vibrate' in navigator;
+    this.hasUserInteracted = false;
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('pointerdown', () => {
+        this.hasUserInteracted = true;
+      }, { once: true });
+    }
   }
 
   vibrate(pattern) {
-    if (!this.supported) return;
+    if (!this.supported || !this.hasUserInteracted) return;
     try {
       navigator.vibrate(pattern);
     } catch (e) {
-      // Ignore vibration blocks
+      // Silently catch browser interventions
     }
   }
 
@@ -38,6 +45,11 @@ class HapticEngine {
     } else {
       this.vibrate([25, 20, 45]);
     }
+  }
+
+  // Alias so both names work seamlessly
+  fireworkExplosion() {
+    this.fireworkBurst('large');
   }
 
   heartbeat() {

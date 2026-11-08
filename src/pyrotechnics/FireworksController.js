@@ -49,9 +49,14 @@ export class FireworksController {
 
   // Detonation Phase: Audio + Environmental Flash + Spark Shell
   detonate(x, y, z, theme = 'gold', type = 'chrysanthemum') {
-    // 1. Audio Concussion & Haptics
-    audioSynth.playBurstBoom();
-    haptics.fireworkExplosion();
+    // 1. Audio Concussion & Haptics (Safely guarded)
+    try {
+      if (audioSynth?.playBurstBoom) audioSynth.playBurstBoom();
+      if (haptics?.fireworkExplosion) haptics.fireworkExplosion();
+      else if (haptics?.fireworkBurst) haptics.fireworkBurst();
+    } catch (e) {
+      // Non-blocking
+    }
 
     // 2. Dynamic Explosive Flash
     if (this.flashLight) {
