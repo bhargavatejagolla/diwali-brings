@@ -1,6 +1,8 @@
 /**
  * Engine — Master WebGL Creative Experience Engine (Three.js r187 + UnrealBloomPass)
  * Orchestrates lighting, cosmic environment, post-processing, scenes, and interactions.
+ * Features automatic multi-tier WebGL fallbacks and seamless FallbackCanvasEngine activation
+ * so the application NEVER crashes or renders a black screen under any browser condition.
  */
 
 import * as THREE from 'three';
@@ -11,6 +13,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { LightingSystem } from './LightingSystem.js';
 import { SkyAndEnvironment } from './SkyAndEnvironment.js';
 import { SceneManager } from './SceneManager.js';
+import { FallbackCanvasEngine } from './FallbackCanvasEngine.js';
 
 import { Scene1FirstLight } from '../scenes/Scene1FirstLight.js';
 import { Scene2Rangoli } from '../scenes/Scene2Rangoli.js';
@@ -20,6 +23,16 @@ import { Scene5Fireworks } from '../scenes/Scene5Fireworks.js';
 
 export class Engine {
   constructor(canvas) {
+    // Dispose previous instance on hot-reloading to prevent WebGL context leaks
+    if (typeof window !== 'undefined') {
+      if (window.__activeEngine) {
+        try {
+          window.__activeEngine.dispose();
+        } catch (e) {}
+      }
+      window.__activeEngine = this;
+    }
+
     this.canvas = canvas;
     this.width = window.innerWidth;
     this.height = window.innerHeight;
@@ -36,6 +49,21 @@ export class Engine {
     this.currentTiltX = 0;
     this.currentTiltY = 0;
 
+    // Multi-tier WebGL context attempt
+    const result = this.createRenderer(this.canvas);
+    this.renderer = result.renderer;
+    this.canvas = result.canvas;
+
+    // If WebGL is completely disabled or unsupported, seamlessly switch to 2D Fallback
+    if (!this.renderer) {
+      console.warn("WebGL unavailable or disabled. Activating FallbackCanvasEngine.");
+      this.isFallback = true;
+      this.fallbackEngine = new FallbackCanvasEngine(this.canvas);
+      return;
+    }
+
+    this.isFallback = false;
+
     // 1. Scene & Atmosphere Fog
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.FogExp2(0x0a102c, 0.0075);
@@ -43,15 +71,7 @@ export class Engine {
     // 2. Camera
     this.camera = new THREE.PerspectiveCamera(46, this.width / this.height, 0.1, 1000);
 
-    // 3. WebGL Renderer
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas,
-      antialias: true,
-      alpha: false,
-      powerPreference: 'high-performance',
-      stencil: false,
-      depth: true
-    });
+    // 3. Renderer configuration
     this.renderer.setSize(this.width, this.height);
     this.renderer.setPixelRatio(this.dpr);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -84,63 +104,122 @@ export class Engine {
     this.bindEvents();
   }
 
+  createRenderer(canvas) {
+    let activeCanvas = canvas;
+
+    // Attempt Tier 1: High performance WebGL
+    try {
+      const renderer = new THREE.WebGLRenderer({
+        canvas: activeCanvas,
+        antialias: true,
+        alpha: false,
+        powerPreference: 'high-performance',
+        stencil: false,
+        depth: true
+      });
+      return { renderer, canvas: activeCanvas };
+    } catch (e1) {
+      console.warn("WebGL tier 1 context creation failed, trying tier 2 with fresh canvas...", e1);
+    }
+
+    // Refresh canvas element in case previous WebGL context was in error state
+    if (activeCanvas && activeCanvas.parentNode) {
+      const freshCanvas = activeCanvas.cloneNode(true);
+      activeCanvas.parentNode.replaceChild(freshCanvas, activeCanvas);
+      activeCanvas = freshCanvas;
+    }
+
+    // Attempt Tier 2: Standard WebGL
+    try {
+      const renderer = new THREE.WebGLRenderer({
+        canvas: activeCanvas,
+        antialias: false,
+        alpha: false,
+        powerPreference: 'default'
+      });
+      return { renderer, canvas: activeCanvas };
+    } catch (e2) {
+      console.warn("WebGL tier 2 context creation failed, trying tier 3...", e2);
+    }
+
+    // Attempt Tier 3: WebGL 1
+    try {
+      const gl = activeCanvas.getContext('webgl') || activeCanvas.getContext('experimental-webgl');
+      if (gl) {
+        const renderer = new THREE.WebGLRenderer({ canvas: activeCanvas, context: gl });
+        return { renderer, canvas: activeCanvas };
+      }
+    } catch (e3) {
+      console.warn("WebGL tier 3 context creation failed.", e3);
+    }
+
+    return { renderer: null, canvas: activeCanvas };
+  }
+
   initPostProcessing() {
-    const renderScene = new RenderPass(this.scene, this.camera);
+    try {
+      const renderScene = new RenderPass(this.scene, this.camera);
+      this.bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(this.width, this.height),
+        1.3,
+        0.55,
+        0.72
+      );
 
-    this.bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(this.width, this.height),
-      1.3,  // strength
-      0.55, // radius
-      0.72  // threshold (only emissive flame, rockets, fireworks & lanterns bloom)
-    );
-
-    this.composer = new EffectComposer(this.renderer);
-    this.composer.addPass(renderScene);
-    this.composer.addPass(this.bloomPass);
+      this.composer = new EffectComposer(this.renderer);
+      this.composer.addPass(renderScene);
+      this.composer.addPass(this.bloomPass);
+    } catch (e) {
+      console.warn("EffectComposer post-processing initialization failed, falling back to direct render", e);
+      this.composer = null;
+    }
   }
 
   setScene(target) {
+    if (this.isFallback) return this.fallbackEngine.setScene(target);
     this.sceneManager.setScene(target);
   }
 
   launchFirework(targetX, targetY, theme, type) {
+    if (this.isFallback) return this.fallbackEngine.launchFirework(targetX, targetY, theme, type);
     this.scene5.launch(targetX, targetY, theme, type);
   }
 
   launchFromScreen(clientX, clientY, theme, type) {
+    if (this.isFallback) return this.fallbackEngine.launchFromScreen(clientX, clientY, theme, type);
     this.scene5.launchFromScreen(clientX, clientY, this.width, this.height, theme, type);
   }
 
   launchBarrage(theme, type) {
+    if (this.isFallback) return this.fallbackEngine.launchBarrage(theme, type);
     this.scene5.launchBarrage(theme, type);
   }
 
   releaseWish(wishText) {
+    if (this.isFallback) return this.fallbackEngine.releaseWish(wishText);
     this.scene5.releaseWish(wishText);
   }
 
   triggerGrandFinale() {
+    if (this.isFallback) return this.fallbackEngine.triggerGrandFinale();
     this.scene5.triggerGrandFinale();
   }
 
   spawnRipple(x, y, strength) {
-    // Interactive feedback for Scene 1
+    if (this.isFallback) return this.fallbackEngine.spawnRipple(x, y, strength);
   }
 
   update(dt) {
     this.time += 0.018 * dt;
 
-    // Environmental stardust
     this.environment.update(dt);
 
-    // Update scenes
     this.scene1.update(dt, this.time);
     this.scene2.update(dt, this.time);
     this.scene3.update(dt, this.time);
     this.scene4.update(dt, this.time);
     this.scene5.update(dt, this.time);
 
-    // Camera tilt parallax
     this.currentTiltX += (this.targetTiltX - this.currentTiltX) * 0.04 * dt;
     this.currentTiltY += (this.targetTiltY - this.currentTiltY) * 0.04 * dt;
     this.sceneManager.updateParallax(this.currentTiltX, this.currentTiltY);
@@ -169,6 +248,7 @@ export class Engine {
   }
 
   start() {
+    if (this.isFallback) return this.fallbackEngine.start();
     if (this.running) return;
     this.running = true;
     this.lastTime = performance.now();
@@ -176,12 +256,24 @@ export class Engine {
   }
 
   stop() {
+    if (this.isFallback) return this.fallbackEngine.stop();
     this.running = false;
     if (this.rafId) cancelAnimationFrame(this.rafId);
   }
 
+  dispose() {
+    this.stop();
+    if (this.isFallback) {
+      this.fallbackEngine?.dispose();
+      return;
+    }
+    try {
+      this.renderer?.dispose();
+      this.renderer?.forceContextLoss();
+    } catch (e) {}
+  }
+
   bindEvents() {
-    // Window Resize with Composer update
     window.addEventListener('resize', () => {
       this.width = window.innerWidth;
       this.height = window.innerHeight;
@@ -193,13 +285,11 @@ export class Engine {
       }
     });
 
-    // Pointer Parallax
     window.addEventListener('pointermove', (e) => {
       this.targetTiltX = (e.clientX / this.width - 0.5) * 1.6;
       this.targetTiltY = (e.clientY / this.height - 0.5) * 1.2;
     });
 
-    // Device Gyroscope Parallax on Mobile
     window.addEventListener('deviceorientation', (e) => {
       if (e.gamma !== null && e.beta !== null) {
         this.targetTiltX = (e.gamma / 30) * 1.4;
@@ -207,7 +297,6 @@ export class Engine {
       }
     });
 
-    // Sky click/tap to launch fireworks in Scene 5
     let lastTap = 0;
     window.addEventListener('pointerdown', (e) => {
       const now = performance.now();
