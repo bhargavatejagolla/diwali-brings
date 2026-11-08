@@ -180,18 +180,18 @@ class ExperienceApp {
         // Fireworks Symphony
         this.fireworksCanvas.style.pointerEvents = 'auto';
         this.fireworksEngine.start();
-        // Launch welcoming golden willow
+        // Launch welcoming golden kamuro willow
         setTimeout(() => {
-          this.fireworksEngine.launchRocket(window.innerWidth / 2, window.innerHeight * 0.35, 'heart');
+          this.fireworksEngine.launchRocket(window.innerWidth / 2, window.innerHeight * 0.32, 'kamuro');
         }, 600);
 
-        // Voice Recognition for "Happy Diwali"
+        // Voice Recognition for "Happy Diwali" or "Shravya"
         voiceTrigger.start(() => {
-          this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.3, 'heart');
+          this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.28, 'brocade');
           setTimeout(() => {
-            this.fireworksEngine.launchRocket(window.innerWidth * 0.35, window.innerHeight * 0.25, 'gold_willow');
-            this.fireworksEngine.launchRocket(window.innerWidth * 0.65, window.innerHeight * 0.25, 'gold_willow');
-          }, 400);
+            this.fireworksEngine.launchRocket(window.innerWidth * 0.32, window.innerHeight * 0.24, 'kamuro');
+            this.fireworksEngine.launchRocket(window.innerWidth * 0.68, window.innerHeight * 0.24, 'kamuro');
+          }, 350);
         });
         break;
 
@@ -237,7 +237,9 @@ class ExperienceApp {
     const handleFireworkLaunch = (e) => {
       if (this.currentChapter === 6 && !e.target.closest('button')) {
         audioSynth.ensureContext();
-        this.fireworksEngine.launchRocket(e.clientX, e.clientY, Math.random() > 0.4 ? 'gold_willow' : 'heart');
+        const types = ['kamuro', 'brocade', 'strobe'];
+        const chosen = types[Math.floor(Math.random() * types.length)];
+        this.fireworksEngine.launchRocket(e.clientX, e.clientY, chosen);
       }
     };
 
@@ -248,32 +250,32 @@ class ExperienceApp {
     }
 
     // Chapter 6 Fireworks Control Buttons
-    const btnWillow = document.getElementById('fw-willow-btn');
-    const btnHeart = document.getElementById('fw-heart-btn');
-    const btnFinale = document.getElementById('fw-finale-btn');
+    const btnKamuro = document.getElementById('fw-kamuro-btn');
+    const btnBrocade = document.getElementById('fw-brocade-btn');
+    const btnStrobe = document.getElementById('fw-strobe-btn');
 
-    if (btnWillow) {
-      btnWillow.addEventListener('click', () => {
+    if (btnKamuro) {
+      btnKamuro.addEventListener('click', () => {
         audioSynth.ensureContext();
-        this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.3, 'gold_willow');
+        this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.3, 'kamuro');
       });
     }
 
-    if (btnHeart) {
-      btnHeart.addEventListener('click', () => {
+    if (btnBrocade) {
+      btnBrocade.addEventListener('click', () => {
         audioSynth.ensureContext();
-        this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.32, 'heart');
+        this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.28, 'brocade');
       });
     }
 
-    if (btnFinale) {
-      btnFinale.addEventListener('click', () => {
+    if (btnStrobe) {
+      btnStrobe.addEventListener('click', () => {
         audioSynth.ensureContext();
         const w = window.innerWidth;
         const h = window.innerHeight;
-        this.fireworksEngine.launchRocket(w * 0.3, h * 0.3, 'gold_willow');
-        setTimeout(() => this.fireworksEngine.launchRocket(w * 0.7, h * 0.28, 'gold_willow'), 250);
-        setTimeout(() => this.fireworksEngine.launchRocket(w * 0.5, h * 0.22, 'heart'), 500);
+        this.fireworksEngine.launchRocket(w * 0.35, h * 0.3, 'strobe');
+        setTimeout(() => this.fireworksEngine.launchRocket(w * 0.65, h * 0.28, 'strobe'), 200);
+        setTimeout(() => this.fireworksEngine.launchRocket(w * 0.5, h * 0.22, 'kamuro'), 450);
       });
     }
 
@@ -290,7 +292,7 @@ class ExperienceApp {
         
         // Launch celebratory fireworks
         this.fireworksEngine.start();
-        this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.3, 'heart');
+        this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.3, 'kamuro');
         audioSynth.playStarlightChime(880); // A5
         haptics.sealBroken();
       };

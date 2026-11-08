@@ -1,7 +1,8 @@
 /**
- * FireworksEngine — Photorealistic physics canvas simulation
- * Features: Rocket smoke trails, white-hot core blooms, willow golden rain,
- * heart-shape detonation mathematics, synchronized procedural sound and haptics.
+ * Photorealistic Fireworks Engine (Authentic Pyrotechnic Simulation)
+ * Professional pyrotechnic algorithms: Nishiki Kamuro golden willow waterfalls,
+ * Imperial Brocade Crowns, and Diamond Strobe chrysanthemums.
+ * Zero cartoon hearts — pure cinematic 4K physics.
  */
 
 import { audioSynth } from './audio-synth.js';
@@ -36,14 +37,17 @@ export class FireworksEngine {
     this.running = false;
   }
 
-  // Launch a realistic rocket
-  launchRocket(targetX, targetY, type = 'gold_willow') {
-    const startX = this.width * 0.2 + Math.random() * (this.width * 0.6);
-    const startY = this.height + 20;
+  /**
+   * Launch high-velocity pyrotechnic rocket
+   * Types: 'kamuro' (golden willow), 'brocade' (crackling crown), 'strobe' (diamond stars)
+   */
+  launchRocket(targetX, targetY, type = 'kamuro') {
+    const startX = this.width * 0.25 + Math.random() * (this.width * 0.5);
+    const startY = this.height + 25;
 
     const angle = Math.atan2(targetY - startY, targetX - startX);
     const dist = Math.hypot(targetX - startX, targetY - startY);
-    const speed = dist / 45; // Arrives in ~45 frames
+    const speed = dist / 42;
 
     this.rockets.push({
       x: startX,
@@ -53,66 +57,78 @@ export class FireworksEngine {
       targetX,
       targetY,
       type,
-      trail: [],
-      hue: Math.random() > 0.4 ? 42 : Math.floor(Math.random() * 360)
+      trail: []
     });
 
     audioSynth.playRocketLaunch();
   }
 
-  // Explode at coordinates
-  explode(x, y, type = 'gold_willow', hue = 42) {
-    this.screenFlashAlpha = 0.35;
-    const isLarge = type === 'heart' || type === 'grand_finale';
+  explode(x, y, type = 'kamuro') {
+    this.screenFlashAlpha = type === 'brocade' ? 0.38 : 0.28;
+    const isLarge = type === 'brocade' || type === 'kamuro';
     audioSynth.playFireworkBurst(isLarge ? 'large' : 'medium');
     haptics.fireworkBurst(isLarge ? 'large' : 'medium');
 
-    const count = isLarge ? 260 : 160;
+    const count = isLarge ? 280 : 180;
 
-    if (type === 'heart') {
-      // Mathematical Heart Curve: x = 16 sin^3(t), y = -(13 cos(t) - 5 cos(2t) - 2 cos(3t) - cos(4t))
-      for (let i = 0; i < count; i++) {
-        const t = (Math.PI * 2 * i) / count;
-        const hx = 16 * Math.pow(Math.sin(t), 3);
-        const hy = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-        const speed = 0.35 + Math.random() * 0.08;
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 7.5 + 1.2;
 
-        this.particles.push({
-          x,
-          y,
-          vx: hx * speed + (Math.random() - 0.5) * 0.4,
-          vy: hy * speed + (Math.random() - 0.5) * 0.4,
-          color: Math.random() > 0.2 ? '#ff4081' : '#ffd700',
-          alpha: 1,
-          decay: 0.009 + Math.random() * 0.005,
-          gravity: 0.04,
-          drag: 0.96,
-          size: 2.2,
-          flicker: true
-        });
+      let color, decay, gravity, drag, flicker, secondary;
+
+      if (type === 'kamuro') {
+        // Nishiki Kamuro: Long-hanging golden willow rain with slow descent
+        color = Math.random() > 0.2 ? '#f5d061' : '#fff5cc';
+        decay = 0.005 + Math.random() * 0.004; // Very slow decay
+        gravity = 0.065;
+        drag = 0.978;
+        flicker = Math.random() > 0.4;
+        secondary = Math.random() > 0.75;
+      } else if (type === 'brocade') {
+        // Imperial Brocade Crown: Wide golden burst with micro-sparkles
+        color = Math.random() > 0.3 ? '#ffd700' : '#ffffff';
+        decay = 0.008 + Math.random() * 0.006;
+        gravity = 0.05;
+        drag = 0.965;
+        flicker = true;
+        secondary = Math.random() > 0.6;
+      } else {
+        // Diamond Strobe: Crisp twinkling celestial white and amber
+        color = Math.random() > 0.4 ? '#ffffff' : '#ffd591';
+        decay = 0.012 + Math.random() * 0.007;
+        gravity = 0.04;
+        drag = 0.95;
+        flicker = true;
+        secondary = false;
       }
-    } else {
-      // Spherical & Golden Willow Burst
-      for (let i = 0; i < count; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 8.5 + 1.2;
-        const isGoldWillow = type === 'gold_willow';
 
-        this.particles.push({
-          x,
-          y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          color: isGoldWillow ? (Math.random() > 0.3 ? '#ffd700' : '#fff8dc') : `hsl(${hue}, 100%, 70%)`,
-          alpha: 1,
-          decay: isGoldWillow ? 0.007 + Math.random() * 0.005 : 0.012 + Math.random() * 0.008, // Willow lingers
-          gravity: isGoldWillow ? 0.07 : 0.05,
-          drag: isGoldWillow ? 0.97 : 0.94,
-          size: isGoldWillow ? 2.4 : 2.0,
-          flicker: isGoldWillow,
-          secondarySparks: isGoldWillow && Math.random() > 0.7
-        });
-      }
+      this.particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        color,
+        alpha: 1,
+        decay,
+        gravity,
+        drag,
+        size: Math.random() * 2 + 1.4,
+        flicker,
+        secondary
+      });
+    }
+
+    // Atmospheric illuminated smoke puffs
+    for (let s = 0; s < 5; s++) {
+      this.smoke.push({
+        x: x + (Math.random() - 0.5) * 25,
+        y: y + (Math.random() - 0.5) * 25,
+        size: 20 + Math.random() * 25,
+        alpha: 0.22,
+        growth: 0.4,
+        decay: 0.006
+      });
     }
   }
 
@@ -122,28 +138,25 @@ export class FireworksEngine {
       const r = this.rockets[i];
       r.x += r.vx;
       r.y += r.vy;
-      r.vy += 0.05; // slight rocket gravity
+      r.vy += 0.04;
 
-      // Add to trail
       r.trail.push({ x: r.x, y: r.y, alpha: 1 });
-      if (r.trail.length > 8) r.trail.shift();
+      if (r.trail.length > 9) r.trail.shift();
 
-      // Emit smoke puffs
       if (Math.random() > 0.4) {
         this.smoke.push({
-          x: r.x + (Math.random() - 0.5) * 4,
-          y: r.y + (Math.random() - 0.5) * 4,
-          size: 3 + Math.random() * 4,
-          alpha: 0.25,
-          growth: 0.2,
-          decay: 0.008
+          x: r.x + (Math.random() - 0.5) * 3,
+          y: r.y + (Math.random() - 0.5) * 3,
+          size: 4 + Math.random() * 5,
+          alpha: 0.2,
+          growth: 0.25,
+          decay: 0.01
         });
       }
 
-      // Check detonation
       const dist = Math.hypot(r.targetX - r.x, r.targetY - r.y);
-      if (dist < 20 || r.y <= r.targetY) {
-        this.explode(r.targetX, r.targetY, r.type, r.hue);
+      if (dist < 18 || r.y <= r.targetY) {
+        this.explode(r.targetX, r.targetY, r.type);
         this.rockets.splice(i, 1);
       }
     }
@@ -157,21 +170,21 @@ export class FireworksEngine {
       p.vy = p.vy * p.drag + p.gravity;
       p.alpha -= p.decay;
 
-      // Occasional micro-spark for willow
-      if (p.secondarySparks && Math.random() > 0.85 && p.alpha > 0.3) {
+      // Kamuro willow secondary golden micro-droplets
+      if (p.secondary && Math.random() > 0.88 && p.alpha > 0.25) {
         this.particles.push({
           x: p.x,
           y: p.y,
-          vx: (Math.random() - 0.5) * 1.5,
-          vy: (Math.random() - 0.5) * 1.5,
+          vx: (Math.random() - 0.5) * 0.8,
+          vy: (Math.random() - 0.5) * 0.8,
           color: '#ffffff',
-          alpha: p.alpha * 0.8,
-          decay: 0.04,
-          gravity: 0.02,
-          drag: 0.9,
-          size: 1.2,
+          alpha: p.alpha * 0.9,
+          decay: 0.035,
+          gravity: 0.03,
+          drag: 0.92,
+          size: 1.1,
           flicker: false,
-          secondarySparks: false
+          secondary: false
         });
       }
 
@@ -185,7 +198,7 @@ export class FireworksEngine {
       const s = this.smoke[i];
       s.size += s.growth;
       s.alpha -= s.decay;
-      s.y -= 0.15; // Slow rise
+      s.y -= 0.12;
       if (s.alpha <= 0) {
         this.smoke.splice(i, 1);
       }
@@ -193,7 +206,7 @@ export class FireworksEngine {
 
     // 4. Update Screen Flash
     if (this.screenFlashAlpha > 0) {
-      this.screenFlashAlpha -= 0.035;
+      this.screenFlashAlpha -= 0.03;
       if (this.screenFlashAlpha < 0) this.screenFlashAlpha = 0;
     }
   }
@@ -201,54 +214,53 @@ export class FireworksEngine {
   draw() {
     this.ctx.clearRect(0, 0, this.width, this.height);
 
-    // Screen Flash (Bloom simulation)
+    // Screen Bloom Pulse
     if (this.screenFlashAlpha > 0) {
-      this.ctx.fillStyle = `rgba(255, 235, 180, ${this.screenFlashAlpha})`;
+      this.ctx.fillStyle = `rgba(255, 230, 160, ${this.screenFlashAlpha})`;
       this.ctx.fillRect(0, 0, this.width, this.height);
     }
 
-    // Draw Smoke
+    // Illuminated Atmospheric Smoke
     for (const s of this.smoke) {
-      this.ctx.fillStyle = `rgba(200, 190, 220, ${s.alpha * 0.3})`;
+      this.ctx.fillStyle = `rgba(180, 165, 205, ${s.alpha * 0.25})`;
       this.ctx.beginPath();
       this.ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
       this.ctx.fill();
     }
 
-    // Draw Rockets
+    // Rocket Trails & Heads
     this.ctx.save();
-    this.ctx.lineWidth = 2.5;
+    this.ctx.lineWidth = 2;
     for (const r of this.rockets) {
       for (let j = 0; j < r.trail.length - 1; j++) {
         const p1 = r.trail[j];
         const p2 = r.trail[j + 1];
-        this.ctx.strokeStyle = `rgba(255, 215, 0, ${(j / r.trail.length) * 0.9})`;
+        this.ctx.strokeStyle = `rgba(255, 215, 100, ${(j / r.trail.length) * 0.85})`;
         this.ctx.beginPath();
         this.ctx.moveTo(p1.x, p1.y);
         this.ctx.lineTo(p2.x, p2.y);
         this.ctx.stroke();
       }
 
-      // Glowing head
       this.ctx.fillStyle = '#ffffff';
       this.ctx.shadowColor = '#ffd700';
       this.ctx.shadowBlur = 10;
       this.ctx.beginPath();
-      this.ctx.arc(r.x, r.y, 3, 0, Math.PI * 2);
+      this.ctx.arc(r.x, r.y, 2.8, 0, Math.PI * 2);
       this.ctx.fill();
     }
     this.ctx.restore();
 
-    // Draw Particles with Composite Glow
+    // High Bloom Light Composite Particles
     this.ctx.save();
     this.ctx.globalCompositeOperation = 'lighter';
 
     for (const p of this.particles) {
-      const alpha = p.flicker && Math.random() > 0.3 ? p.alpha * 0.7 : p.alpha;
+      const alpha = p.flicker && Math.random() > 0.35 ? p.alpha * 0.65 : p.alpha;
       this.ctx.fillStyle = p.color;
       this.ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
       this.ctx.shadowColor = p.color;
-      this.ctx.shadowBlur = 8;
+      this.ctx.shadowBlur = 7;
 
       this.ctx.beginPath();
       this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
