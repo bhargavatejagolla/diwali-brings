@@ -9,7 +9,7 @@ import { memory } from './engines/storage.js';
 import { haptics } from './interactions/haptics.js';
 import { breathDetector } from './interactions/breath.js';
 import { voiceTrigger } from './interactions/voice.js';
-import { CinematicWorld } from './engines/cinematic-world.js';
+import { ThreeMasterWorld } from './engines/three-master-world.js';
 import { gsap } from 'gsap';
 
 class ExperienceApp {
@@ -17,8 +17,8 @@ class ExperienceApp {
     this.currentScene = 1;
     this.totalScenes = 5;
 
-    // Cinematic Master Canvas
-    this.cinematicCanvas = document.getElementById('cinematic-canvas');
+    // Real-Time 3D WebGL Canvas
+    this.webglCanvas = document.getElementById('webgl-canvas');
     this.world = null;
 
     this.rangoliWishes = [
@@ -36,9 +36,9 @@ class ExperienceApp {
   }
 
   init() {
-    // 1. Initialize Master Cinematic Simulation World
-    if (this.cinematicCanvas) {
-      this.world = new CinematicWorld(this.cinematicCanvas);
+    // 1. Initialize Master Real-Time 3D WebGL World Engine
+    if (this.webglCanvas) {
+      this.world = new ThreeMasterWorld(this.webglCanvas);
       this.world.start();
     }
 
