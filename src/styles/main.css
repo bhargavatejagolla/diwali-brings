@@ -141,6 +141,21 @@ html, body {
   pointer-events: auto;
 }
 
+#scene-1 {
+  justify-content: flex-end;
+  padding-bottom: 105px;
+}
+
+#scene-2 {
+  justify-content: flex-end;
+  padding-bottom: 95px;
+}
+
+#scene-5 {
+  justify-content: flex-end;
+  padding-bottom: 90px;
+}
+
 .scene-eyebrow {
   font-size: clamp(10px, 2.2vw, 11px);
   color: var(--color-gold);

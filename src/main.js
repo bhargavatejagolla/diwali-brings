@@ -152,18 +152,25 @@ class ExperienceApp {
         break;
 
       case 5:
-        // Launch welcoming celebratory firework
+        // Launch welcoming celebratory firework barrage
         setTimeout(() => {
           if (this.world) {
-            this.world.launchFirework(window.innerWidth * 0.5, window.innerHeight * 0.28, 'gold');
+            this.world.launchFirework(0, 22, 'gold');
+            setTimeout(() => {
+              this.world.launchFirework(-7, 20, 'teal');
+              this.world.launchFirework(7, 20, 'pink');
+            }, 300);
           }
-        }, 400);
+        }, 350);
 
         // Voice trigger
         voiceTrigger.start(() => {
           if (this.world) {
-            this.world.launchFirework(window.innerWidth * 0.35, window.innerHeight * 0.26, 'teal');
-            this.world.launchFirework(window.innerWidth * 0.65, window.innerHeight * 0.26, 'pink');
+            this.world.launchFirework(-6, 22, 'teal');
+            this.world.launchFirework(6, 22, 'pink');
+            setTimeout(() => {
+              this.world.launchFirework(0, 25, 'gold');
+            }, 250);
           }
         });
         break;
@@ -237,13 +244,17 @@ class ExperienceApp {
       });
     }
 
-    // 4. Jewel Fireworks Buttons
+    // 4. Jewel Fireworks Buttons (Grand Barrages)
     document.querySelectorAll('.jewel-trigger-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const theme = btn.getAttribute('data-theme') || 'gold';
         audioSynth.ensureContext();
         if (this.world) {
-          this.world.launchFirework(window.innerWidth * 0.5, window.innerHeight * 0.28, theme);
+          this.world.launchFirework(0, 22, theme);
+          setTimeout(() => {
+            this.world.launchFirework(-6, 20, theme);
+            this.world.launchFirework(6, 20, theme);
+          }, 200);
         }
       });
     });
@@ -259,13 +270,16 @@ class ExperienceApp {
         wishInput.value = '';
         this.renderSavedWishes();
         
-        // Launch celebratory fireworks
+        // Launch grand celebratory fireworks barrage
         if (this.world) {
-          this.world.launchFirework(window.innerWidth * 0.5, window.innerHeight * 0.26, 'gold');
+          this.world.launchFirework(0, 24, 'gold');
           setTimeout(() => {
-            this.world.launchFirework(window.innerWidth * 0.35, window.innerHeight * 0.3, 'teal');
-            this.world.launchFirework(window.innerWidth * 0.65, window.innerHeight * 0.3, 'pink');
+            this.world.launchFirework(-8, 22, 'teal');
+            this.world.launchFirework(8, 22, 'pink');
           }, 250);
+          setTimeout(() => {
+            this.world.launchFirework(0, 26, 'violet');
+          }, 500);
         }
 
         audioSynth.playStarlightChime(880);
