@@ -11,6 +11,7 @@ import { breathDetector } from './interactions/breath.js';
 import { voiceTrigger } from './interactions/voice.js';
 import { CinematicWorld } from './engines/cinematic-world.js';
 import { ScratchFoilEngine } from './engines/scratch-foil.js';
+import { gsap } from 'gsap';
 
 class ExperienceApp {
   constructor() {
@@ -62,31 +63,56 @@ class ExperienceApp {
   }
 
   goToScene(target) {
-    if (target < 1 || target > this.totalScenes) return;
+    if (target < 1 || target > this.totalScenes || target === this.currentScene) return;
 
-    // Transition DOM Views
     const prevEl = document.getElementById(`scene-${this.currentScene}`);
-    if (prevEl) prevEl.classList.remove('active');
+    const nextEl = document.getElementById(`scene-${target}`);
 
-    this.currentScene = target;
+    if (prevEl && nextEl) {
+      const tl = gsap.timeline();
 
-    const nextEl = document.getElementById(`scene-${this.currentScene}`);
-    if (nextEl) nextEl.classList.add('active');
+      tl.to(prevEl, {
+        opacity: 0,
+        y: -12,
+        duration: 0.35,
+        ease: 'power2.in',
+        onComplete: () => {
+          prevEl.classList.remove('active');
+          gsap.set(prevEl, { clearProps: 'opacity,transform' });
+        }
+      });
 
-    // Update Progress Navigation
-    document.querySelectorAll('#scene-progress-bar .scene-step-pill').forEach((pill, idx) => {
-      pill.classList.toggle('active', idx + 1 === this.currentScene);
-    });
+      tl.call(() => {
+        this.currentScene = target;
+        nextEl.classList.add('active');
 
-    // Notify Cinematic World Engine
-    if (this.world) {
-      this.world.setScene(target);
+        // Update Progress Navigation
+        document.querySelectorAll('#scene-progress-bar .scene-step-pill').forEach((pill, idx) => {
+          pill.classList.toggle('active', idx + 1 === this.currentScene);
+        });
+
+        // Notify Cinematic World Engine
+        if (this.world) {
+          this.world.setScene(target);
+        }
+
+        this.onSceneEntered(target);
+      });
+
+      tl.fromTo(nextEl,
+        { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: 0.55, ease: 'power2.out' }
+      );
+    } else {
+      if (prevEl) prevEl.classList.remove('active');
+      this.currentScene = target;
+      if (nextEl) nextEl.classList.add('active');
+      if (this.world) this.world.setScene(target);
+      this.onSceneEntered(target);
     }
 
     audioSynth.ensureContext();
     haptics.lightTap();
-
-    this.onSceneEntered(target);
   }
 
   onSceneEntered(scene) {
