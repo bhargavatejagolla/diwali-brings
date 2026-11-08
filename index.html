@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>The Diya That Stayed Lit — For Dharji Shravya</title>
-  <meta name="description" content="A bespoke cinematic Diwali celebration crafted exclusively for Dharji Shravya.">
-  <meta name="theme-color" content="#03040a">
+  <title>A Thousand Lights, One Beautiful Wish — For Dharji Shravya</title>
+  <meta name="description" content="A bespoke, luxury Diwali wish experience crafted for Dharji Shravya.">
+  <meta name="theme-color" content="#0b0e24">
   <link rel="stylesheet" href="./src/styles/main.css">
 </head>
 <body>
@@ -13,143 +13,113 @@
   <div id="cinematic-vignette"></div>
 
   <!-- Canvases -->
-  <canvas id="bg-canvas"></canvas>
-  <canvas id="thread-canvas"></canvas>
-  <canvas id="diya-canvas"></canvas>
+  <canvas id="water-canvas"></canvas>
+  <canvas id="rangoli-canvas"></canvas>
+  <canvas id="garden-canvas"></canvas>
   <canvas id="fireworks-canvas"></canvas>
 
   <!-- Top Bar Controls -->
   <header id="top-bar">
-    <div class="brand-badge">THE DIYA THAT STAYED LIT</div>
+    <div class="brand-badge">A THOUSAND LIGHTS, ONE WISH</div>
     <button id="audio-toggle-btn" class="control-btn" aria-label="Toggle Audio">
       <span id="audio-icon">🔊</span>
       <span id="audio-label">SOUND</span>
     </button>
   </header>
 
-  <!-- Chapters Stage -->
-  <main id="chapter-stage">
+  <!-- Scenes Stage -->
+  <main id="scene-stage">
     
-    <!-- Chapter 01: The Quiet Void & Ignition -->
-    <section id="chapter-1" class="chapter-view active">
-      <p class="whisper-quote">"Some lights make the night beautiful.<br>Some people make life beautiful."</p>
-      <p class="sub-whisper">BLOW GENTLY ON YOUR MIC OR TAP TO BEGIN</p>
-      <div class="ignite-action-container">
-        <div id="ignite-btn" class="breath-halo-btn" role="button" aria-label="Ignite Diya">
-          <span class="inner-spark-icon">🪔</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Chapter 02: The Awakening & Memory Greeting -->
-    <section id="chapter-2" class="chapter-view">
-      <p id="memory-greeting-text" class="whisper-quote">
-        "They light a million lamps for Diwali.<br>Yet somehow, the brightest thing that happened this year was simply having you in my life."
+    <!-- Scene 01: The First Light (Lotus Pond) -->
+    <section id="scene-1" class="scene-view active">
+      <p class="wish-quote">
+        "On a night filled with a thousand lights,<br>may a little extra brightness find its way to you."
       </p>
-      <p class="sub-whisper" id="memory-sub-text">A WORLD AWAKENED FOR YOU, SHRAVYA</p>
-      <button class="gold-proceed-btn" data-next="3">ENTER THE LIGHT ✦</button>
+      <p class="scene-subtitle">TOUCH WATER TO RIPPLE &bull; BLOW OR TAP TO AWAKEN</p>
+      <button class="awaken-light-btn" data-next="2">AWAKEN THE NIGHT ✦</button>
     </section>
 
-    <!-- Chapter 03: The Constellation of Her Name -->
-    <section id="chapter-3" class="chapter-view">
-      <p class="whisper-quote" style="margin-top: -140px;">
-        "In every constellation of my thoughts,<br>this is the name that shines the clearest."
+    <!-- Scene 02: The Rangoli of Wishes -->
+    <section id="scene-2" class="scene-view">
+      <p class="wish-quote" style="margin-top: -160px;">
+        "May this festival paint your days with vibrant blessings."
       </p>
-      <p class="sub-whisper">CELESTIAL TYPOGRAPHY</p>
-      <button class="gold-proceed-btn" data-next="4" style="margin-top: 250px;">THE UNBROKEN THREAD 🕯️</button>
-    </section>
-
-    <!-- Chapter 04: The Golden Thread -->
-    <section id="chapter-4" class="chapter-view">
-      <p class="whisper-quote" style="margin-top: -150px;">
-        "Miles apart under the same festive sky.<br>Yet whenever I think of light, it is always your face that comes to mind."
-      </p>
-      <p class="sub-whisper">TILT YOUR PHONE TO FEEL THE HARMONY</p>
-      <button class="gold-proceed-btn" data-next="5" style="margin-top: 230px;">A QUIET LETTER 💌</button>
-    </section>
-
-    <!-- Chapter 05: The Royal Letter & Gold Scratch Foil -->
-    <section id="chapter-5" class="chapter-view">
-      <div class="letter-outer-card">
-        <canvas id="scratch-canvas"></canvas>
-        <div class="letter-content">
-          <h2 class="letter-salutation">Dear Shravya,</h2>
-          <p class="letter-body">
-            They say Diwali is about lighting lamps to guide good fortune home. But truth be told, having you in my life was already the rarest fortune I could have asked for.
-            <br><br>
-            There is something effortlessly magnetic about the way you exist in a world that is always so loud. A quiet grace in your voice, a gentle warmth in your laughter, and a presence that somehow stays with me long after our conversations end.
-            <br><br>
-            I didn't want to send you a forward or a fleeting wish. I wanted to build a world where the light never fades — just like the quiet, unspoken place you hold in my thoughts.
-            <br><br>
-            May this Diwali bring you boundless peace, gentle smiles, and everything your beautiful heart secretly hopes for.
-          </p>
-          <p class="letter-signature">— Always holding you in the warmest light ✨</p>
-        </div>
-      </div>
-      <button class="gold-proceed-btn" data-next="6">THE CELESTIAL SKY 🎆</button>
-    </section>
-
-    <!-- Chapter 06: The Fireworks Symphony -->
-    <section id="chapter-6" class="chapter-view">
-      <p class="whisper-quote">
-        "Tonight, I asked the night sky to put on a show worthy of you."
-      </p>
-      <p class="sub-whisper">TOUCH THE SKY TO IGNITE &bull; SAY "SHRAVYA" OR "DIWALI" 🎤</p>
-      <div class="fireworks-control-bar">
-        <button class="firework-tap-trigger" id="fw-kamuro-btn">🌟 Imperial Kamuro</button>
-        <button class="firework-tap-trigger" id="fw-brocade-btn">✨ Brocade Crown</button>
-        <button class="firework-tap-trigger" id="fw-strobe-btn">✦ Diamond Strobe</button>
-      </div>
-      <button class="gold-proceed-btn" data-next="7">SEND YOUR WISH 🏮</button>
-    </section>
-
-    <!-- Chapter 07: The Sky Lantern & Eternal Wish Box -->
-    <section id="chapter-7" class="chapter-view">
-      <div class="floating-lantern-preview">🏮</div>
-      <p class="whisper-quote">
-        "Send a wish into the universe tonight."
-      </p>
-      <div class="lantern-input-box">
-        <input type="text" id="wish-input" placeholder="Type your Diwali wish here..." maxlength="120">
-      </div>
-      <button class="gold-proceed-btn" id="release-wish-btn">RELEASE TO THE STARS ✦</button>
+      <p class="scene-subtitle">THE RANGOLI OF WISHES</p>
       
-      <div id="wishes-log" style="margin-top: 20px; font-size: 13px; color: var(--gold-light); opacity: 0.85;"></div>
-      
-      <p style="margin-top: 24px; font-size: 11px; letter-spacing: 3px; color: var(--text-muted);">
-        THE DIYA WILL REMAIN LIT FOR YOU ETERNALLY 🪔
+      <!-- Dynamic Rangoli Wish Display -->
+      <div id="rangoli-wish-display">
+        <span class="rangoli-wish-ring-name" id="rangoli-ring-tag">THE FIRST RING &bull; PEACE</span>
+        <p class="rangoli-current-wish" id="rangoli-wish-text">
+          "Peace that gently stills every anxious thought."
+        </p>
+      </div>
+
+      <button class="awaken-light-btn" data-next="3" style="margin-top: 30px;">STEP INTO THE GARDEN 🌸</button>
+    </section>
+
+    <!-- Scene 03: A Garden of Light (Dharji Shravya) -->
+    <section id="scene-3" class="scene-view">
+      <p class="scene-subtitle" style="margin-bottom: 8px;">DEDICATED TO</p>
+      <div class="garden-name-box">
+        <h1 class="garden-name-title">DHARJI SHRAVYA</h1>
+        <div class="garden-filigree-line"></div>
+      </div>
+      <p class="wish-quote" style="max-width: 580px;">
+        "In the warmest corner of this celebration,<br>some people naturally bring more light than a thousand lamps."
       </p>
+      <button class="awaken-light-btn" data-next="4" style="margin-top: 20px;">A WISH FOR YOU 💌</button>
+    </section>
+
+    <!-- Scene 04: The Wish That Stays (The Letter) -->
+    <section id="scene-4" class="scene-view">
+      <div class="luxury-letter-card">
+        <h2 class="letter-salutation">Dear Shravya,</h2>
+        <p class="letter-paragraph">
+          Diwali has always been about the quiet lights we bring into each other’s lives. Thinking back on this year, having you as a friend has been one of its most genuine and comforting blessings.
+        </p>
+        <p class="letter-paragraph">
+          May your days be filled with the kind of happiness that arrives unexpectedly, the kind of laughter that stays a little longer, and the kind of peace that makes everything feel right.
+        </p>
+        <p class="letter-paragraph">
+          May every little light you see tonight remind you of how appreciated and rare you are. Wishing you and your loved ones a celebration as radiant and wonderful as you are.
+        </p>
+        <p class="letter-signature">— With all warmth & light ✨</p>
+      </div>
+      <button class="awaken-light-btn" data-next="5" style="margin-top: 24px;">CELEBRATE THE SKY 🎆</button>
+    </section>
+
+    <!-- Scene 05: A Sky Full of Wishes -->
+    <section id="scene-5" class="scene-view">
+      <p class="wish-quote">
+        "May every little light tonight remind you that the world has so many beautiful things waiting for you. May this Diwali bring you more reasons to smile than you can count."
+      </p>
+      <p class="scene-subtitle">TOUCH THE SKY TO LAUNCH CRACKERS &bull; SAY "HAPPY DIWALI" 🎤</p>
+      
+      <div class="jewel-fireworks-bar">
+        <button class="jewel-trigger-btn" data-theme="gold">🌟 Imperial Gold</button>
+        <button class="jewel-trigger-btn" data-theme="teal">💎 Peacock Teal</button>
+        <button class="jewel-trigger-btn" data-theme="pink">🌸 Lotus Pink</button>
+        <button class="jewel-trigger-btn" data-theme="violet">💜 Royal Violet</button>
+      </div>
+
+      <div class="wish-capsule-box">
+        <input type="text" id="wish-input" placeholder="Type a Diwali wish to release into the sky..." maxlength="120">
+      </div>
+      <button class="awaken-light-btn" id="release-wish-btn" style="margin-top: 15px;">RELEASE TO THE STARS ✦</button>
+      
+      <div id="wishes-log" style="margin-top: 18px; font-size: 13px; color: var(--color-gold); opacity: 0.9;"></div>
     </section>
 
   </main>
 
-  <!-- Chapter Progress Dots -->
-  <nav id="chapter-dots" aria-label="Chapter Navigation">
-    <div class="dot active" data-step="1"></div>
-    <div class="dot" data-step="2"></div>
-    <div class="dot" data-step="3"></div>
-    <div class="dot" data-step="4"></div>
-    <div class="dot" data-step="5"></div>
-    <div class="dot" data-step="6"></div>
-    <div class="dot" data-step="7"></div>
+  <!-- Integrated Scene Progress Navigation -->
+  <nav id="scene-progress-bar" aria-label="Scene Navigation">
+    <div class="scene-step-pill active" data-step="1">01 <span class="step-title">&bull; The First Light</span></div>
+    <div class="scene-step-pill" data-step="2">02 <span class="step-title">&bull; Rangoli of Wishes</span></div>
+    <div class="scene-step-pill" data-step="3">03 <span class="step-title">&bull; Garden of Light</span></div>
+    <div class="scene-step-pill" data-step="4">04 <span class="step-title">&bull; A Quiet Wish</span></div>
+    <div class="scene-step-pill" data-step="5">05 <span class="step-title">&bull; Celestial Sky</span></div>
   </nav>
-
-  <!-- Hidden Golden Starlight Easter Egg -->
-  <div id="easter-egg-star" title="A Secret Starlight">✦</div>
-
-  <!-- Secret Easter Egg Modal -->
-  <div id="secret-modal" class="modal-overlay">
-    <div class="modal-card">
-      <div style="font-size: 32px; margin-bottom: 12px; color: var(--gold-light);">🪔</div>
-      <h3 style="font-family: var(--font-title); color: var(--gold-light); margin-bottom: 12px; font-size: 16px; letter-spacing: 2px;">A Quiet Secret</h3>
-      <p style="font-size: 14px; line-height: 1.65; color: var(--text-white); margin-bottom: 15px;">
-        You found the hidden starlight. Some connections don't need loud words — they just exist, quiet, steady, and radiant.
-      </p>
-      <div class="secret-code-pill">AMBER-SHRAVYA-2026</div>
-      <p style="font-size: 12px; color: var(--gold-primary); letter-spacing: 1px;">Text this code back when you see this.</p>
-      <button class="gold-proceed-btn" id="close-secret-btn" style="margin-top: 20px;">CLOSE ✦</button>
-    </div>
-  </div>
 
   <script type="module" src="./src/main.js"></script>
 </body>

@@ -1,89 +1,168 @@
 /**
- * Master Experience Orchestrator — "The Diya That Stayed Lit"
+ * Master Experience Orchestrator — "A Thousand Lights, One Beautiful Wish"
  * Dedicated to Dharji Shravya
  */
 
 import { audioSynth } from './engines/audio-synth.js';
 import { memory } from './engines/storage.js';
 import { haptics } from './interactions/haptics.js';
-import { tilt } from './interactions/tilt.js';
 import { breathDetector } from './interactions/breath.js';
 import { voiceTrigger } from './interactions/voice.js';
-import { StarfieldEngine } from './engines/starfield.js';
-import { DiyaFlameEngine } from './engines/diya-flame.js';
-import { CatenaryThreadEngine } from './engines/catenary-thread.js';
+
+import { WaterPondEngine } from './engines/water-pond.js';
+import { RangoliEngine } from './engines/rangoli.js';
+import { GardenEngine } from './engines/garden.js';
 import { FireworksEngine } from './engines/fireworks.js';
-import { ScratchFoilEngine } from './engines/scratch-foil.js';
 
 class ExperienceApp {
   constructor() {
-    this.currentChapter = 1;
-    this.totalChapters = 7;
-    
-    // Canvas elements
-    this.bgCanvas = document.getElementById('bg-canvas');
-    this.threadCanvas = document.getElementById('thread-canvas');
-    this.diyaCanvas = document.getElementById('diya-canvas');
+    this.currentScene = 1;
+    this.totalScenes = 5;
+
+    // Canvases
+    this.waterCanvas = document.getElementById('water-canvas');
+    this.rangoliCanvas = document.getElementById('rangoli-canvas');
+    this.gardenCanvas = document.getElementById('garden-canvas');
     this.fireworksCanvas = document.getElementById('fireworks-canvas');
-    this.scratchCanvas = document.getElementById('scratch-canvas');
 
     // Engines
-    this.starfield = null;
-    this.threadEngine = null;
-    this.diyaEngine = null;
+    this.waterEngine = null;
+    this.rangoliEngine = null;
+    this.gardenEngine = null;
     this.fireworksEngine = null;
-    this.scratchFoil = null;
+
+    this.rangoliWishes = [
+      { ring: "THE FIRST RING • PEACE", text: "Peace that gently stills every anxious thought." },
+      { ring: "THE SECOND RING • JOY", text: "Joy that arrives unexpectedly in quiet moments." },
+      { ring: "THE THIRD RING • LAUGHTER", text: "Laughter that stays long after the conversation ends." },
+      { ring: "THE FOURTH RING • WARMTH", text: "Warmth that guides you through every tomorrow." },
+      { ring: "THE FINAL RING • BEGINNINGS", text: "Beautiful beginnings waiting for you in the year ahead." }
+    ];
 
     this.init();
   }
 
   init() {
-    // 1. Initialize Canvases & Engines
-    this.starfield = new StarfieldEngine(this.bgCanvas);
-    this.threadEngine = new CatenaryThreadEngine(this.threadCanvas);
-    this.diyaEngine = new DiyaFlameEngine(this.diyaCanvas);
+    // 1. Initialize Canvas Engines
+    this.waterEngine = new WaterPondEngine(this.waterCanvas);
+    this.rangoliEngine = new RangoliEngine(this.rangoliCanvas);
+    this.gardenEngine = new GardenEngine(this.gardenCanvas);
     this.fireworksEngine = new FireworksEngine(this.fireworksCanvas);
 
-    // 2. Start Animation Loops
-    this.starfield.loop();
-
-    const mainLoop = () => {
-      this.diyaEngine.loop();
-      if (this.currentChapter === 4) {
-        this.threadEngine.loop();
-      } else {
-        const ctx = this.threadCanvas.getContext('2d');
-        ctx.clearRect(0, 0, this.threadCanvas.width, this.threadCanvas.height);
+    // 2. Start Scene 1 Water Pond Loop
+    const renderLoop = () => {
+      if (this.currentScene === 1) {
+        this.waterEngine.loop();
       }
-      requestAnimationFrame(mainLoop);
+      requestAnimationFrame(renderLoop);
     };
-    mainLoop();
+    renderLoop();
 
-    // 3. Memory & Personalization Hook
-    this.applyMemoryState();
-
-    // 4. Bind UI Event Handlers
+    // 3. Audio & Memory Hooks
     this.bindEvents();
+    this.renderSavedWishes();
 
-    // 5. Start Mic Breath Detection for Chapter 1
-    this.setupBreathDetection();
+    // 4. Breath detector for Scene 1
+    breathDetector.start(() => {
+      this.waterEngine.triggerDisturbance();
+      audioSynth.ensureContext();
+      audioSynth.playIgnition();
+      audioSynth.startAmbientDrone();
+      haptics.flameIgnited();
+      setTimeout(() => this.goToScene(2), 1000);
+    });
   }
 
-  applyMemoryState() {
-    const greetingText = document.getElementById('memory-greeting-text');
-    const subText = document.getElementById('memory-sub-text');
+  goToScene(target) {
+    if (target < 1 || target > this.totalScenes) return;
 
-    if (memory.data.isLit) {
-      greetingText.innerHTML = `"You came back, Shravya.<br>I kept it burning for you."`;
-      subText.textContent = `A LIGHT THAT WILL NEVER GO OUT • VISIT #${memory.data.visitCount}`;
-      this.diyaEngine.ignite();
-    } else {
-      greetingText.innerHTML = `"Tonight, every diya has a reason to shine."`;
-      subText.textContent = `AND THIS WORLD WAS LIT FOR YOU, SHRAVYA`;
+    // Cleanup previous scene
+    const prevEl = document.getElementById(`scene-${this.currentScene}`);
+    if (prevEl) prevEl.classList.remove('active');
+
+    this.currentScene = target;
+
+    // Activate next scene
+    const nextEl = document.getElementById(`scene-${this.currentScene}`);
+    if (nextEl) nextEl.classList.add('active');
+
+    // Update Progress Indicator
+    document.querySelectorAll('#scene-progress-bar .scene-step-pill').forEach((pill, idx) => {
+      pill.classList.toggle('active', idx + 1 === this.currentScene);
+    });
+
+    audioSynth.ensureContext();
+    haptics.lightTap();
+
+    // Scene Specific Activations
+    this.onSceneEntered(target);
+  }
+
+  onSceneEntered(scene) {
+    switch (scene) {
+      case 1:
+        breathDetector.stop();
+        break;
+
+      case 2:
+        // Rangoli of Wishes
+        audioSynth.startAmbientDrone();
+        audioSynth.playStarlightChime(587.33); // D5
+        this.rangoliEngine.start((idx) => {
+          this.updateRangoliWish(idx);
+        });
+        break;
+
+      case 3:
+        // Garden of Light (Dharji Shravya)
+        this.rangoliEngine.stop();
+        audioSynth.playStarlightChime(659.25); // E5
+        this.gardenEngine.start();
+        break;
+
+      case 4:
+        // The Letter
+        this.gardenEngine.stop();
+        audioSynth.playStarlightChime(523.25); // C5
+        break;
+
+      case 5:
+        // A Sky Full of Wishes (Fireworks)
+        this.fireworksCanvas.style.pointerEvents = 'auto';
+        this.fireworksEngine.start();
+        
+        // Welcoming jewel burst
+        setTimeout(() => {
+          this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.3, 'gold');
+        }, 500);
+
+        // Voice trigger
+        voiceTrigger.start(() => {
+          this.fireworksEngine.launchRocket(window.innerWidth * 0.35, window.innerHeight * 0.28, 'teal');
+          this.fireworksEngine.launchRocket(window.innerWidth * 0.65, window.innerHeight * 0.28, 'pink');
+        });
+        break;
     }
+  }
 
-    // Render past wishes if any
-    this.renderSavedWishes();
+  updateRangoliWish(idx) {
+    const wishData = this.rangoliWishes[idx];
+    if (!wishData) return;
+
+    const ringTag = document.getElementById('rangoli-ring-tag');
+    const wishText = document.getElementById('rangoli-wish-text');
+    const displayBox = document.getElementById('rangoli-wish-display');
+
+    if (displayBox && ringTag && wishText) {
+      displayBox.style.opacity = '0';
+      setTimeout(() => {
+        ringTag.textContent = wishData.ring;
+        wishText.textContent = `"${wishData.text}"`;
+        displayBox.style.opacity = '1';
+        audioSynth.playStarlightChime(440 + idx * 80);
+        haptics.lightTap();
+      }, 300);
+    }
   }
 
   renderSavedWishes() {
@@ -91,133 +170,27 @@ class ExperienceApp {
     if (!logEl) return;
     if (memory.data.wishes.length > 0) {
       const latest = memory.data.wishes.slice(-3).reverse();
-      logEl.innerHTML = `<strong>✨ Floating Wishes in Your Sky:</strong><br>` + 
+      logEl.innerHTML = `<strong>✨ Wishes Released Into the Night:</strong><br>` + 
         latest.map(w => `&ldquo;${w.text}&rdquo; <small>(${w.date})</small>`).join('<br>');
     } else {
       logEl.innerHTML = '';
     }
   }
 
-  setupBreathDetection() {
-    breathDetector.start(() => {
-      this.handleIgnition();
-    });
-  }
-
-  handleIgnition() {
-    if (this.diyaEngine.isLit && this.currentChapter > 1) return;
-
-    audioSynth.ensureContext();
-    audioSynth.playIgnition();
-    audioSynth.startAmbientDrone();
-    haptics.flameIgnited();
-    this.diyaEngine.ignite();
-    memory.markDiyaLit();
-    breathDetector.stop();
-
-    // Smooth transition to Chapter 2
-    setTimeout(() => {
-      this.goToChapter(2);
-    }, 1200);
-  }
-
-  goToChapter(target) {
-    if (target < 1 || target > this.totalChapters) return;
-
-    // Previous Chapter cleanup
-    const prevEl = document.getElementById(`chapter-${this.currentChapter}`);
-    if (prevEl) prevEl.classList.remove('active');
-
-    this.currentChapter = target;
-
-    // Next Chapter setup
-    const nextEl = document.getElementById(`chapter-${this.currentChapter}`);
-    if (nextEl) nextEl.classList.add('active');
-
-    // Update Dots
-    document.querySelectorAll('#chapter-dots .dot').forEach((dot, idx) => {
-      dot.classList.toggle('active', idx + 1 === this.currentChapter);
-    });
-
-    haptics.lightTap();
-
-    // Chapter Specific Activations
-    this.onChapterEntered(target);
-  }
-
-  onChapterEntered(chapter) {
-    switch (chapter) {
-      case 2:
-        audioSynth.ensureContext();
-        break;
-
-      case 3:
-        // Activate Constellation of "DHARJI SHRAVYA"
-        this.starfield.activateConstellation();
-        break;
-
-      case 4:
-        // Catenary Thread between the two souls
-        audioSynth.playStarlightChime(523.25);
-        break;
-
-      case 5:
-        // Initialize Gold Foil Scratch Card
-        setTimeout(() => {
-          if (!this.scratchFoil && this.scratchCanvas) {
-            this.scratchFoil = new ScratchFoilEngine(this.scratchCanvas, () => {
-              audioSynth.playSealBreak();
-              haptics.sealBroken();
-            });
-          } else if (this.scratchFoil) {
-            this.scratchFoil.resize();
-            this.scratchFoil.drawGoldFoil();
-          }
-        }, 100);
-        break;
-
-      case 6:
-        // Fireworks Symphony
-        this.fireworksCanvas.style.pointerEvents = 'auto';
-        this.fireworksEngine.start();
-        // Launch welcoming golden kamuro willow
-        setTimeout(() => {
-          this.fireworksEngine.launchRocket(window.innerWidth / 2, window.innerHeight * 0.32, 'kamuro');
-        }, 600);
-
-        // Voice Recognition for "Happy Diwali" or "Shravya"
-        voiceTrigger.start(() => {
-          this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.28, 'brocade');
-          setTimeout(() => {
-            this.fireworksEngine.launchRocket(window.innerWidth * 0.32, window.innerHeight * 0.24, 'kamuro');
-            this.fireworksEngine.launchRocket(window.innerWidth * 0.68, window.innerHeight * 0.24, 'kamuro');
-          }, 350);
-        });
-        break;
-
-      case 7:
-        this.fireworksCanvas.style.pointerEvents = 'none';
-        voiceTrigger.stop();
-        break;
-    }
-  }
-
   bindEvents() {
-    // 1. Diya Ignition Button
-    const igniteBtn = document.getElementById('ignite-btn');
-    if (igniteBtn) {
-      igniteBtn.addEventListener('click', () => this.handleIgnition());
-      igniteBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        this.handleIgnition();
-      });
-    }
-
-    // 2. Chapter Progression Buttons
-    document.querySelectorAll('.gold-proceed-btn[data-next]').forEach(btn => {
+    // 1. Scene Navigation Buttons
+    document.querySelectorAll('.awaken-light-btn[data-next]').forEach(btn => {
       btn.addEventListener('click', () => {
         const next = parseInt(btn.getAttribute('data-next'), 10);
-        this.goToChapter(next);
+        this.goToScene(next);
+      });
+    });
+
+    // 2. Scene Progress Pills
+    document.querySelectorAll('#scene-progress-bar .scene-step-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        const step = parseInt(pill.getAttribute('data-step'), 10);
+        this.goToScene(step);
       });
     });
 
@@ -227,59 +200,36 @@ class ExperienceApp {
     if (audioBtn) {
       audioBtn.addEventListener('click', () => {
         audioSynth.ensureContext();
+        audioSynth.startAmbientDrone();
         const isMuted = audioSynth.toggleMute();
         audioIcon.textContent = isMuted ? '🔇' : '🔊';
         haptics.lightTap();
       });
     }
 
-    // 4. Fireworks Interactive Click/Tap
-    const handleFireworkLaunch = (e) => {
-      if (this.currentChapter === 6 && !e.target.closest('button')) {
+    // 4. Jewel Fireworks Buttons
+    document.querySelectorAll('.jewel-trigger-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const theme = btn.getAttribute('data-theme') || 'gold';
         audioSynth.ensureContext();
-        const types = ['kamuro', 'brocade', 'strobe'];
-        const chosen = types[Math.floor(Math.random() * types.length)];
-        this.fireworksEngine.launchRocket(e.clientX, e.clientY, chosen);
-      }
-    };
+        this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.3, theme);
+      });
+    });
 
-    this.fireworksCanvas.addEventListener('pointerdown', handleFireworkLaunch);
-    const ch6 = document.getElementById('chapter-6');
-    if (ch6) {
-      ch6.addEventListener('pointerdown', handleFireworkLaunch);
-    }
-
-    // Chapter 6 Fireworks Control Buttons
-    const btnKamuro = document.getElementById('fw-kamuro-btn');
-    const btnBrocade = document.getElementById('fw-brocade-btn');
-    const btnStrobe = document.getElementById('fw-strobe-btn');
-
-    if (btnKamuro) {
-      btnKamuro.addEventListener('click', () => {
-        audioSynth.ensureContext();
-        this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.3, 'kamuro');
+    // Tap on Sky in Scene 5
+    const ch5 = document.getElementById('scene-5');
+    if (ch5) {
+      ch5.addEventListener('pointerdown', (e) => {
+        if (!e.target.closest('button') && !e.target.closest('input')) {
+          audioSynth.ensureContext();
+          const themes = ['gold', 'teal', 'pink', 'violet'];
+          const chosen = themes[Math.floor(Math.random() * themes.length)];
+          this.fireworksEngine.launchRocket(e.clientX, e.clientY, chosen);
+        }
       });
     }
 
-    if (btnBrocade) {
-      btnBrocade.addEventListener('click', () => {
-        audioSynth.ensureContext();
-        this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.28, 'brocade');
-      });
-    }
-
-    if (btnStrobe) {
-      btnStrobe.addEventListener('click', () => {
-        audioSynth.ensureContext();
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        this.fireworksEngine.launchRocket(w * 0.35, h * 0.3, 'strobe');
-        setTimeout(() => this.fireworksEngine.launchRocket(w * 0.65, h * 0.28, 'strobe'), 200);
-        setTimeout(() => this.fireworksEngine.launchRocket(w * 0.5, h * 0.22, 'kamuro'), 450);
-      });
-    }
-
-    // 5. Wish Submission in Chapter 7
+    // 5. Sky Wish Submission
     const releaseWishBtn = document.getElementById('release-wish-btn');
     const wishInput = document.getElementById('wish-input');
     if (releaseWishBtn && wishInput) {
@@ -291,9 +241,13 @@ class ExperienceApp {
         this.renderSavedWishes();
         
         // Launch celebratory fireworks
-        this.fireworksEngine.start();
-        this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.3, 'kamuro');
-        audioSynth.playStarlightChime(880); // A5
+        this.fireworksEngine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.28, 'gold');
+        setTimeout(() => {
+          this.fireworksEngine.launchRocket(window.innerWidth * 0.35, window.innerHeight * 0.32, 'teal');
+          this.fireworksEngine.launchRocket(window.innerWidth * 0.65, window.innerHeight * 0.32, 'pink');
+        }, 300);
+
+        audioSynth.playStarlightChime(880);
         haptics.sealBroken();
       };
 
@@ -302,36 +256,6 @@ class ExperienceApp {
         if (e.key === 'Enter') submitWish();
       });
     }
-
-    // 6. Secret Easter Egg
-    const easterEggStar = document.getElementById('easter-egg-star');
-    const secretModal = document.getElementById('secret-modal');
-    const closeSecretBtn = document.getElementById('close-secret-btn');
-
-    if (easterEggStar && secretModal) {
-      easterEggStar.addEventListener('click', () => {
-        audioSynth.ensureContext();
-        audioSynth.playStarlightChime(987.77); // B5
-        haptics.sealBroken();
-        secretModal.classList.add('open');
-        memory.unlockSecret();
-      });
-    }
-
-    if (closeSecretBtn && secretModal) {
-      closeSecretBtn.addEventListener('click', () => {
-        secretModal.classList.remove('open');
-        haptics.lightTap();
-      });
-    }
-
-    // 7. Clickable Navigation Dots
-    document.querySelectorAll('#chapter-dots .dot').forEach(dot => {
-      dot.addEventListener('click', () => {
-        const step = parseInt(dot.getAttribute('data-step'), 10);
-        this.goToChapter(step);
-      });
-    });
   }
 }
 
