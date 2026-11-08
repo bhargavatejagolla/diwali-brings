@@ -1,20 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Great+Vibes&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
 
 :root {
-  /* The Luxury Diwali Palette */
-  --color-midnight: #0b0e24;
-  --color-indigo: #11152f;
-  --color-violet: #5a267f;
-  --color-pink: #d84c87;
-  --color-teal: #087e83;
+  --color-midnight: #060918;
+  --color-indigo: #0d122b;
   --color-gold: #e6b94f;
+  --color-gold-light: #fef08a;
+  --color-teal: #087e83;
+  --color-pink: #d84c87;
+  --color-violet: #5a267f;
   --color-ivory: #fff0d6;
-  --color-gold-glow: rgba(230, 185, 79, 0.4);
+  --color-ivory-dim: rgba(255, 240, 214, 0.78);
   
   --font-serif: 'Playfair Display', Georgia, serif;
   --font-title: 'Cinzel Decorative', serif;
   --font-hand: 'Great Vibes', cursive;
-  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
   --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -31,32 +31,65 @@ html, body {
   height: 100%;
   overflow: hidden;
   background-color: var(--color-midnight);
-  background: radial-gradient(circle at 50% 30%, #1a1e47 0%, var(--color-indigo) 55%, var(--color-midnight) 100%);
   font-family: var(--font-sans);
   color: var(--color-ivory);
 }
 
-/* Atmospheric Vignette & Color Radiance */
+/* ----------------------------------------------------
+   CINEMATIC PHOTOGRAPHIC BACKGROUND LAYERS
+   ---------------------------------------------------- */
+
+#cinematic-backgrounds {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.cinematic-bg-layer {
+  position: absolute;
+  inset: -10px;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transform: scale(1);
+  filter: brightness(0.65) contrast(1.1);
+  transition: opacity 1.4s var(--ease-cinematic), transform 8s ease-out;
+  will-change: opacity, transform;
+}
+
+.cinematic-bg-layer.active {
+  opacity: 1;
+  transform: scale(1.03);
+}
+
+/* Atmospheric Darkness, Vignette & Lighting Mask */
 #cinematic-vignette {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(circle at 50% 40%, transparent 40%, rgba(11, 14, 36, 0.85) 92%);
-  z-index: 10;
+  background: radial-gradient(circle at 50% 45%, rgba(6, 9, 24, 0.2) 20%, rgba(6, 9, 24, 0.75) 80%, rgba(4, 6, 16, 0.95) 100%);
+  z-index: 2;
 }
 
-/* Master Canvas */
-#world-canvas {
+/* Canvas Lighting & Particle Overlay */
+#fx-canvas {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   display: block;
-  z-index: 1;
+  z-index: 3;
+  pointer-events: none;
 }
 
-/* Integrated Luxury Top Navigation */
+/* ----------------------------------------------------
+   TOP BAR (MINIMALIST LUXURY, ZERO EMOJIS)
+   ---------------------------------------------------- */
+
 #top-bar {
   position: fixed;
   top: 24px;
@@ -71,21 +104,25 @@ html, body {
 .brand-badge {
   font-family: var(--font-title);
   font-size: 11px;
-  letter-spacing: 3px;
+  letter-spacing: 4px;
   color: var(--color-gold);
-  text-shadow: 0 0 10px var(--color-gold-glow);
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(230, 185, 79, 0.4);
 }
 
 .control-btn {
-  background: rgba(255, 240, 214, 0.06);
-  border: 1px solid rgba(230, 185, 79, 0.35);
+  background: rgba(6, 9, 24, 0.65);
+  border: 1px solid rgba(230, 185, 79, 0.4);
   color: var(--color-ivory);
   padding: 8px 18px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: 10.5px;
+  font-family: var(--font-sans);
   letter-spacing: 2px;
+  text-transform: uppercase;
   cursor: pointer;
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transition: all 0.3s var(--ease-cinematic);
 }
 
@@ -95,7 +132,10 @@ html, body {
   transform: translateY(-1px);
 }
 
-/* Scenes Container */
+/* ----------------------------------------------------
+   SCENES STAGE & CONTENT
+   ---------------------------------------------------- */
+
 #scene-stage {
   position: relative;
   width: 100%;
@@ -115,10 +155,10 @@ html, body {
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 24px;
+  padding: 30px 24px;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(16px) scale(0.99);
+  transform: translateY(16px);
   transition: opacity 1.2s var(--ease-cinematic), transform 1.2s var(--ease-cinematic), visibility 1.2s;
   pointer-events: none;
 }
@@ -126,141 +166,156 @@ html, body {
 .scene-view.active {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0) scale(1);
+  transform: translateY(0);
   pointer-events: auto;
 }
 
-/* Typography Hierarchy */
+/* Editorial Typography */
+.scene-eyebrow {
+  font-size: clamp(10px, 2.2vw, 11px);
+  color: var(--color-gold);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  font-weight: 500;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+}
+
 .wish-quote {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: clamp(21px, 4.2vw, 30px);
+  font-size: clamp(20px, 4vw, 29px);
   color: var(--color-ivory);
-  line-height: 1.6;
-  max-width: 640px;
-  margin-bottom: 22px;
-  text-shadow: 0 4px 25px rgba(0, 0, 0, 0.9);
+  line-height: 1.58;
+  max-width: 620px;
+  margin-bottom: 24px;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 0, 0, 0.8);
 }
 
 .scene-subtitle {
-  font-size: clamp(10px, 2.4vw, 12px);
-  color: var(--color-gold);
-  letter-spacing: 3.5px;
-  font-family: var(--font-sans);
+  font-size: clamp(10px, 2.2vw, 11.5px);
+  color: var(--color-gold-light);
+  letter-spacing: 3px;
   text-transform: uppercase;
   margin-bottom: 30px;
+  font-weight: 400;
+  opacity: 0.9;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
 
-/* Scene 1: First Light Floating Diya Button */
-.awaken-light-btn {
-  background: linear-gradient(135deg, rgba(230, 185, 79, 0.25) 0%, rgba(216, 76, 135, 0.2) 100%);
+/* Luxury Action Button (Zero Emojis) */
+.luxury-action-btn {
+  background: linear-gradient(135deg, rgba(230, 185, 79, 0.3) 0%, rgba(8, 126, 131, 0.25) 100%);
   border: 1px solid var(--color-gold);
   color: var(--color-ivory);
-  padding: 14px 34px;
+  padding: 13px 32px;
   border-radius: 30px;
-  font-family: var(--font-title);
-  font-size: 12px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 3px;
+  text-transform: uppercase;
   cursor: pointer;
-  box-shadow: 0 0 25px rgba(230, 185, 79, 0.25);
-  backdrop-filter: blur(10px);
-  margin-top: 180px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.6), 0 0 25px rgba(230, 185, 79, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transition: all 0.4s var(--ease-cinematic);
 }
 
-.awaken-light-btn:hover {
-  background: linear-gradient(135deg, rgba(230, 185, 79, 0.4) 0%, rgba(216, 76, 135, 0.35) 100%);
+.luxury-action-btn:hover {
+  background: linear-gradient(135deg, rgba(230, 185, 79, 0.5) 0%, rgba(8, 126, 131, 0.4) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 0 35px rgba(230, 185, 79, 0.5);
+  box-shadow: 0 6px 35px rgba(230, 185, 79, 0.45);
 }
 
-/* Scene 2: Rangoli Wish Revealer */
+/* ----------------------------------------------------
+   SCENE 2: RANGOLI WISH DISPLAY
+   ---------------------------------------------------- */
+
 #rangoli-wish-display {
-  min-height: 70px;
-  margin-top: 240px;
+  min-height: 80px;
   max-width: 580px;
-  transition: opacity 0.6s ease;
+  margin-bottom: 24px;
+  transition: opacity 0.5s ease;
+}
+
+.rangoli-wish-ring-name {
+  font-size: 10.5px;
+  letter-spacing: 3.5px;
+  color: var(--color-gold);
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
 }
 
 .rangoli-current-wish {
   font-family: var(--font-serif);
-  font-size: clamp(16px, 3.5vw, 21px);
+  font-style: italic;
+  font-size: clamp(17px, 3.4vw, 22px);
   color: var(--color-ivory);
-  line-height: 1.5;
-  text-shadow: 0 2px 15px rgba(0,0,0,0.8);
+  line-height: 1.55;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.9);
 }
 
-.rangoli-wish-ring-name {
-  font-size: 11px;
-  letter-spacing: 3px;
-  color: var(--color-teal);
-  text-transform: uppercase;
-  margin-bottom: 6px;
-  display: block;
-}
+/* ----------------------------------------------------
+   SCENE 3: GARDEN OF LIGHT (DHARJI SHRAVYA)
+   ---------------------------------------------------- */
 
-/* Scene 3: Garden of Light - Name Centerpiece */
 .garden-name-box {
-  margin-top: 15px;
-  margin-bottom: 30px;
+  margin-top: 10px;
+  margin-bottom: 24px;
 }
 
 .garden-name-title {
   font-family: var(--font-title);
-  font-size: clamp(28px, 6vw, 48px);
+  font-size: clamp(26px, 5.5vw, 44px);
   letter-spacing: 6px;
   color: var(--color-ivory);
-  text-shadow: 0 0 20px rgba(230, 185, 79, 0.6), 0 0 40px rgba(216, 76, 135, 0.3);
+  text-shadow: 0 0 25px rgba(230, 185, 79, 0.7), 0 0 50px rgba(216, 76, 135, 0.4);
 }
 
 .garden-filigree-line {
-  width: 140px;
+  width: 120px;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
-  margin: 12px auto;
+  margin: 14px auto;
 }
 
-/* Scene 4: The Redesigned Luxury Letter */
+/* ----------------------------------------------------
+   SCENE 4: LUXURY LETTER ON AUTHENTIC STATIONERY
+   ---------------------------------------------------- */
+
 .luxury-letter-card {
   position: relative;
-  width: min(92vw, 540px);
-  background: #11152f;
-  background: linear-gradient(155deg, rgba(23, 28, 64, 0.96) 0%, rgba(13, 16, 38, 0.98) 100%);
-  border-radius: 16px;
-  padding: 42px 36px;
+  width: min(92vw, 520px);
+  background: rgba(8, 11, 26, 0.78);
+  border: 1px solid rgba(230, 185, 79, 0.35);
+  border-radius: 12px;
+  padding: 38px 32px;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(8, 126, 131, 0.2);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   text-align: left;
-  border: 1px solid rgba(230, 185, 79, 0.3);
-}
-
-/* Animated Dual-Tone Border */
-.luxury-letter-card::before {
-  content: '';
-  position: absolute;
-  inset: -1.5px;
-  border-radius: 17px;
-  background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-teal) 50%, var(--color-pink) 100%);
-  z-index: -1;
-  opacity: 0.85;
 }
 
 .letter-salutation {
   font-family: var(--font-hand);
   font-size: 32px;
   color: var(--color-gold);
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   letter-spacing: 1px;
 }
 
-/* Serif Body Text: Ultra-Readable & Sincere */
+/* High-Contrast, Clean Sans-Serif Body for Effortless Readability */
 .letter-paragraph {
-  font-family: var(--font-serif);
-  font-size: clamp(16px, 3.4vw, 18.5px);
+  font-family: var(--font-sans);
+  font-size: clamp(14px, 2.9vw, 15.5px);
   color: var(--color-ivory);
   line-height: 1.82;
-  margin-bottom: 18px;
-  opacity: 0.95;
-  font-weight: 400;
+  margin-bottom: 16px;
+  font-weight: 300;
+  letter-spacing: 0.3px;
 }
 
 .letter-signature {
@@ -268,61 +323,75 @@ html, body {
   font-size: 26px;
   color: var(--color-gold);
   text-align: right;
-  margin-top: 24px;
-}
-
-/* Scene 5: Fireworks Controls & Wishing Box */
-.jewel-fireworks-bar {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: center;
   margin-top: 20px;
 }
 
+/* ----------------------------------------------------
+   SCENE 5: FIREWORKS CONTROLS & WISH CAPSULE
+   ---------------------------------------------------- */
+
+.jewel-fireworks-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 15px;
+  margin-bottom: 18px;
+}
+
 .jewel-trigger-btn {
-  background: rgba(255, 240, 214, 0.06);
+  background: rgba(6, 9, 24, 0.65);
   border: 1px solid rgba(230, 185, 79, 0.4);
   color: var(--color-ivory);
-  padding: 10px 20px;
-  border-radius: 22px;
-  font-size: 11px;
+  padding: 9px 18px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-family: var(--font-sans);
   letter-spacing: 2px;
+  text-transform: uppercase;
   cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   transition: all 0.3s ease;
 }
 
 .jewel-trigger-btn:hover {
-  background: rgba(230, 185, 79, 0.2);
+  background: rgba(230, 185, 79, 0.25);
   border-color: var(--color-gold);
 }
 
 .wish-capsule-box {
-  width: min(88vw, 420px);
-  margin-top: 24px;
+  width: min(88vw, 380px);
+  margin: 10px auto;
 }
 
 .wish-capsule-box input {
   width: 100%;
-  background: rgba(255, 240, 214, 0.06);
+  background: rgba(6, 9, 24, 0.6);
   border: 1px solid rgba(8, 126, 131, 0.5);
   border-radius: 28px;
-  padding: 14px 22px;
+  padding: 13px 22px;
   color: var(--color-ivory);
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 13px;
+  letter-spacing: 0.5px;
   outline: none;
   text-align: center;
-  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   transition: all 0.3s ease;
 }
 
 .wish-capsule-box input:focus {
   border-color: var(--color-gold);
-  box-shadow: 0 0 25px var(--color-gold-glow);
+  box-shadow: 0 0 25px rgba(230, 185, 79, 0.4);
 }
 
-/* Elegant Progress Indicator (Scene Steps) */
+/* ----------------------------------------------------
+   INTEGRATED LUXURY PROGRESS BAR (ZERO EMOJIS)
+   ---------------------------------------------------- */
+
 #scene-progress-bar {
   position: fixed;
   bottom: 24px;
@@ -337,23 +406,28 @@ html, body {
 .scene-step-pill {
   padding: 6px 14px;
   border-radius: 16px;
-  font-size: 10px;
+  font-size: 9.5px;
+  font-family: var(--font-sans);
   letter-spacing: 1.5px;
-  color: rgba(255, 240, 214, 0.45);
-  background: rgba(255, 240, 214, 0.05);
+  text-transform: uppercase;
+  color: rgba(255, 240, 214, 0.5);
+  background: rgba(6, 9, 24, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   transition: all 0.4s var(--ease-cinematic);
   white-space: nowrap;
 }
 
 .scene-step-pill.active {
   color: var(--color-ivory);
-  background: linear-gradient(135deg, rgba(230, 185, 79, 0.3), rgba(8, 126, 131, 0.3));
+  background: linear-gradient(135deg, rgba(230, 185, 79, 0.35), rgba(8, 126, 131, 0.35));
   border: 1px solid var(--color-gold);
-  box-shadow: 0 0 15px rgba(230, 185, 79, 0.35);
+  box-shadow: 0 0 15px rgba(230, 185, 79, 0.3);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .scene-step-pill span.step-title {
     display: none;
   }

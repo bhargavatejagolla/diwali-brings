@@ -1,6 +1,6 @@
 /**
  * Master Experience Orchestrator — "A Thousand Lights, One Beautiful Wish"
- * Single World Engine Architecture for Ultra-Smooth 60/120 FPS Performance
+ * Dedicated to Dharji Shravya — Zero Emojis, Pure Cinema, 60/120 FPS
  */
 
 import { audioSynth } from './engines/audio-synth.js';
@@ -8,33 +8,35 @@ import { memory } from './engines/storage.js';
 import { haptics } from './interactions/haptics.js';
 import { breathDetector } from './interactions/breath.js';
 import { voiceTrigger } from './interactions/voice.js';
-import { WorldEngine } from './engines/world-engine.js';
+import { CinematicEngine } from './engines/cinematic-engine.js';
 
 class ExperienceApp {
   constructor() {
     this.currentScene = 1;
     this.totalScenes = 5;
 
-    // Master Canvas
-    this.canvas = document.getElementById('world-canvas');
-    this.world = null;
+    // Master FX Canvas
+    this.canvas = document.getElementById('fx-canvas');
+    this.engine = null;
 
     this.rangoliWishes = [
-      { ring: "THE FIRST RING • PEACE", text: "Peace that gently stills every anxious thought." },
-      { ring: "THE SECOND RING • JOY", text: "Joy that arrives unexpectedly in quiet moments." },
-      { ring: "THE THIRD RING • LAUGHTER", text: "Laughter that stays long after the conversation ends." },
-      { ring: "THE FOURTH RING • WARMTH", text: "Warmth that guides you through every tomorrow." },
-      { ring: "THE FINAL RING • BEGINNINGS", text: "Beautiful beginnings waiting for you in the year ahead." }
+      { ring: "THE FIRST RING / PEACE", text: "Peace that gently stills every anxious thought." },
+      { ring: "THE SECOND RING / JOY", text: "Joy that arrives unexpectedly in quiet moments." },
+      { ring: "THE THIRD RING / LAUGHTER", text: "Laughter that stays long after the conversation ends." },
+      { ring: "THE FOURTH RING / WARMTH", text: "Warmth that guides you through every tomorrow." },
+      { ring: "THE FINAL RING / BEGINNINGS", text: "Beautiful beginnings waiting for you in the year ahead." }
     ];
+
+    this.rangoliInterval = null;
+    this.rangoliIndex = 0;
 
     this.init();
   }
 
   init() {
-    // 1. Initialize Single Master World Engine
-    this.world = new WorldEngine(this.canvas);
-    this.world.onRingComplete = (idx) => this.updateRangoliWish(idx);
-    this.world.start(); // Single unified RAF loop
+    // 1. Initialize Cinematic FX Engine
+    this.engine = new CinematicEngine(this.canvas);
+    this.engine.start();
 
     // 2. Bind DOM Events
     this.bindEvents();
@@ -42,34 +44,40 @@ class ExperienceApp {
 
     // 3. Breath detection on Scene 1
     breathDetector.start(() => {
-      this.world.addRipple(window.innerWidth / 2, window.innerHeight * 0.62, 0.7);
       audioSynth.ensureContext();
       audioSynth.playIgnition();
       audioSynth.startAmbientDrone();
       haptics.flameIgnited();
-      setTimeout(() => this.goToScene(2), 1000);
+      setTimeout(() => this.goToScene(2), 900);
     });
   }
 
   goToScene(target) {
     if (target < 1 || target > this.totalScenes) return;
 
-    // Transition DOM views
+    // 1. Transition DOM Scene Views
     const prevEl = document.getElementById(`scene-${this.currentScene}`);
     if (prevEl) prevEl.classList.remove('active');
+
+    // 2. Transition Cinematic Backgrounds
+    const prevBg = document.getElementById(`bg-${this.currentScene}`);
+    if (prevBg) prevBg.classList.remove('active');
 
     this.currentScene = target;
 
     const nextEl = document.getElementById(`scene-${this.currentScene}`);
     if (nextEl) nextEl.classList.add('active');
 
-    // Update Progress Navigation
+    const nextBg = document.getElementById(`bg-${this.currentScene}`);
+    if (nextBg) nextBg.classList.add('active');
+
+    // 3. Update Progress Pills
     document.querySelectorAll('#scene-progress-bar .scene-step-pill').forEach((pill, idx) => {
       pill.classList.toggle('active', idx + 1 === this.currentScene);
     });
 
-    // Notify World Engine
-    this.world.setScene(target);
+    // 4. Notify Engine
+    this.engine.setScene(target);
 
     audioSynth.ensureContext();
     haptics.lightTap();
@@ -78,6 +86,11 @@ class ExperienceApp {
   }
 
   onSceneEntered(scene) {
+    if (this.rangoliInterval) {
+      clearInterval(this.rangoliInterval);
+      this.rangoliInterval = null;
+    }
+
     switch (scene) {
       case 1:
         breathDetector.stop();
@@ -86,6 +99,13 @@ class ExperienceApp {
       case 2:
         audioSynth.startAmbientDrone();
         audioSynth.playStarlightChime(587.33);
+        // Automatically cycle through the 5 rings of wishes
+        this.rangoliIndex = 0;
+        this.updateRangoliWish(0);
+        this.rangoliInterval = setInterval(() => {
+          this.rangoliIndex = (this.rangoliIndex + 1) % this.rangoliWishes.length;
+          this.updateRangoliWish(this.rangoliIndex);
+        }, 3200);
         break;
 
       case 3:
@@ -99,13 +119,13 @@ class ExperienceApp {
       case 5:
         // Launch welcoming celebratory firework
         setTimeout(() => {
-          this.world.launchFirework(window.innerWidth * 0.5, window.innerHeight * 0.3, 'gold');
+          this.engine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.28, 'gold');
         }, 400);
 
         // Voice trigger
         voiceTrigger.start(() => {
-          this.world.launchFirework(window.innerWidth * 0.35, window.innerHeight * 0.28, 'teal');
-          this.world.launchFirework(window.innerWidth * 0.65, window.innerHeight * 0.28, 'pink');
+          this.engine.launchRocket(window.innerWidth * 0.35, window.innerHeight * 0.26, 'teal');
+          this.engine.launchRocket(window.innerWidth * 0.65, window.innerHeight * 0.26, 'pink');
         });
         break;
     }
@@ -136,7 +156,7 @@ class ExperienceApp {
     if (!logEl) return;
     if (memory.data.wishes.length > 0) {
       const latest = memory.data.wishes.slice(-3).reverse();
-      logEl.innerHTML = `<strong>✨ Wishes Released Into the Night:</strong><br>` + 
+      logEl.innerHTML = `<strong>Wishes Released Into the Night:</strong><br>` + 
         latest.map(w => `&ldquo;${w.text}&rdquo; <small>(${w.date})</small>`).join('<br>');
     } else {
       logEl.innerHTML = '';
@@ -145,7 +165,7 @@ class ExperienceApp {
 
   bindEvents() {
     // 1. Scene Navigation Buttons
-    document.querySelectorAll('.awaken-light-btn[data-next]').forEach(btn => {
+    document.querySelectorAll('.luxury-action-btn[data-next]').forEach(btn => {
       btn.addEventListener('click', () => {
         const next = parseInt(btn.getAttribute('data-next'), 10);
         this.goToScene(next);
@@ -160,15 +180,15 @@ class ExperienceApp {
       });
     });
 
-    // 3. Audio Toggle
+    // 3. Audio Toggle (Zero Emojis)
     const audioBtn = document.getElementById('audio-toggle-btn');
-    const audioIcon = document.getElementById('audio-icon');
+    const audioLabel = document.getElementById('audio-label');
     if (audioBtn) {
       audioBtn.addEventListener('click', () => {
         audioSynth.ensureContext();
         audioSynth.startAmbientDrone();
         const isMuted = audioSynth.toggleMute();
-        audioIcon.textContent = isMuted ? '🔇' : '🔊';
+        audioLabel.textContent = isMuted ? 'SOUND MUTED' : 'SOUND ON';
         haptics.lightTap();
       });
     }
@@ -178,7 +198,7 @@ class ExperienceApp {
       btn.addEventListener('click', () => {
         const theme = btn.getAttribute('data-theme') || 'gold';
         audioSynth.ensureContext();
-        this.world.launchFirework(window.innerWidth * 0.5, window.innerHeight * 0.3, theme);
+        this.engine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.28, theme);
       });
     });
 
@@ -194,10 +214,10 @@ class ExperienceApp {
         this.renderSavedWishes();
         
         // Launch celebratory fireworks
-        this.world.launchFirework(window.innerWidth * 0.5, window.innerHeight * 0.28, 'gold');
+        this.engine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.26, 'gold');
         setTimeout(() => {
-          this.world.launchFirework(window.innerWidth * 0.35, window.innerHeight * 0.32, 'teal');
-          this.world.launchFirework(window.innerWidth * 0.65, window.innerHeight * 0.32, 'pink');
+          this.engine.launchRocket(window.innerWidth * 0.35, window.innerHeight * 0.3, 'teal');
+          this.engine.launchRocket(window.innerWidth * 0.65, window.innerHeight * 0.3, 'pink');
         }, 250);
 
         audioSynth.playStarlightChime(880);

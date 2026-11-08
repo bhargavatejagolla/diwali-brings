@@ -4,59 +4,68 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>A Thousand Lights, One Beautiful Wish — For Dharji Shravya</title>
-  <meta name="description" content="A bespoke, luxury Diwali wish experience crafted for Dharji Shravya.">
-  <meta name="theme-color" content="#0b0e24">
+  <meta name="description" content="A cinematic, photorealistic Diwali experience crafted for Dharji Shravya.">
+  <meta name="theme-color" content="#060918">
   <link rel="stylesheet" href="./src/styles/main.css">
 </head>
 <body>
-  <!-- Cinematic Vignette -->
+  <!-- Cinematic Photographic Environments -->
+  <div id="cinematic-backgrounds">
+    <div class="cinematic-bg-layer active" id="bg-1" style="background-image: url('/assets/scene1-diya.jpg');"></div>
+    <div class="cinematic-bg-layer" id="bg-2" style="background-image: url('/assets/scene2-rangoli.jpg');"></div>
+    <div class="cinematic-bg-layer" id="bg-3" style="background-image: url('/assets/scene3-garden.jpg');"></div>
+    <div class="cinematic-bg-layer" id="bg-4" style="background-image: url('/assets/scene4-stationery.jpg');"></div>
+    <div class="cinematic-bg-layer" id="bg-5" style="background-image: url('/assets/scene5-sky.jpg');"></div>
+  </div>
+
+  <!-- Atmospheric Lighting & Vignette Mask -->
   <div id="cinematic-vignette"></div>
 
-  <!-- Master Unified Canvas (Single 60 FPS Visual Pipeline) -->
-  <canvas id="world-canvas"></canvas>
+  <!-- Hardware-Accelerated Dynamic FX Canvas -->
+  <canvas id="fx-canvas"></canvas>
 
-  <!-- Top Bar Controls -->
+  <!-- Top Minimalist Luxury Bar (Zero Emojis) -->
   <header id="top-bar">
     <div class="brand-badge">A THOUSAND LIGHTS, ONE WISH</div>
     <button id="audio-toggle-btn" class="control-btn" aria-label="Toggle Audio">
-      <span id="audio-icon">🔊</span>
-      <span id="audio-label">SOUND</span>
+      <span id="audio-label">SOUND ON</span>
     </button>
   </header>
 
   <!-- Scenes Stage -->
   <main id="scene-stage">
     
-    <!-- Scene 01: The First Light (Lotus Pond) -->
+    <!-- Scene 01: The First Light -->
     <section id="scene-1" class="scene-view active">
+      <p class="scene-eyebrow">DIWALI CELEBRATION</p>
       <p class="wish-quote">
         "On a night filled with a thousand lights,<br>may a little extra brightness find its way to you."
       </p>
-      <p class="scene-subtitle">TOUCH WATER TO RIPPLE &bull; BLOW OR TAP TO AWAKEN</p>
-      <button class="awaken-light-btn" data-next="2">AWAKEN THE NIGHT ✦</button>
+      <p class="scene-subtitle">TOUCH SCREEN OR TAP BELOW TO AWAKEN</p>
+      <button class="luxury-action-btn" data-next="2">AWAKEN THE NIGHT</button>
     </section>
 
     <!-- Scene 02: The Rangoli of Wishes -->
     <section id="scene-2" class="scene-view">
-      <p class="wish-quote" style="margin-top: -160px;">
-        "May this festival paint your days with vibrant blessings."
+      <p class="scene-eyebrow">THE FESTIVAL OF COLORS</p>
+      <p class="wish-quote" style="max-width: 600px;">
+        "May this festival illuminate your days with vibrant blessings."
       </p>
-      <p class="scene-subtitle">THE RANGOLI OF WISHES</p>
       
-      <!-- Dynamic Rangoli Wish Display -->
+      <!-- Dynamic Rangoli Wish Progression -->
       <div id="rangoli-wish-display">
-        <span class="rangoli-wish-ring-name" id="rangoli-ring-tag">THE FIRST RING &bull; PEACE</span>
+        <span class="rangoli-wish-ring-name" id="rangoli-ring-tag">THE FIRST RING / PEACE</span>
         <p class="rangoli-current-wish" id="rangoli-wish-text">
           "Peace that gently stills every anxious thought."
         </p>
       </div>
 
-      <button class="awaken-light-btn" data-next="3" style="margin-top: 30px;">STEP INTO THE GARDEN 🌸</button>
+      <button class="luxury-action-btn" data-next="3">EXPLORE THE GARDEN</button>
     </section>
 
     <!-- Scene 03: A Garden of Light (Dharji Shravya) -->
     <section id="scene-3" class="scene-view">
-      <p class="scene-subtitle" style="margin-bottom: 8px;">DEDICATED TO</p>
+      <p class="scene-eyebrow">DEDICATED TO</p>
       <div class="garden-name-box">
         <h1 class="garden-name-title">DHARJI SHRAVYA</h1>
         <div class="garden-filigree-line"></div>
@@ -64,7 +73,7 @@
       <p class="wish-quote" style="max-width: 580px;">
         "In the warmest corner of this celebration,<br>some people naturally bring more light than a thousand lamps."
       </p>
-      <button class="awaken-light-btn" data-next="4" style="margin-top: 20px;">A WISH FOR YOU 💌</button>
+      <button class="luxury-action-btn" data-next="4">READ HER WISH</button>
     </section>
 
     <!-- Scene 04: The Wish That Stays (The Letter) -->
@@ -80,42 +89,43 @@
         <p class="letter-paragraph">
           May every little light you see tonight remind you of how appreciated and rare you are. Wishing you and your loved ones a celebration as radiant and wonderful as you are.
         </p>
-        <p class="letter-signature">— With all warmth & light ✨</p>
+        <p class="letter-signature">With all warmth and light</p>
       </div>
-      <button class="awaken-light-btn" data-next="5" style="margin-top: 24px;">CELEBRATE THE SKY 🎆</button>
+      <button class="luxury-action-btn" data-next="5" style="margin-top: 24px;">CELEBRATE THE SKY</button>
     </section>
 
     <!-- Scene 05: A Sky Full of Wishes -->
     <section id="scene-5" class="scene-view">
-      <p class="wish-quote">
-        "May every little light tonight remind you that the world has so many beautiful things waiting for you. May this Diwali bring you more reasons to smile than you can count."
+      <p class="scene-eyebrow">CELESTIAL FINALE</p>
+      <p class="wish-quote" style="max-width: 680px;">
+        "May every light tonight remind you that the world holds so many beautiful things for you. May this Diwali bring you more reasons to smile than you can count."
       </p>
-      <p class="scene-subtitle">TOUCH THE SKY TO LAUNCH CRACKERS &bull; SAY "HAPPY DIWALI" 🎤</p>
+      <p class="scene-subtitle">TOUCH SKY TO LAUNCH CRACKERS / SAY "HAPPY DIWALI" INTO MIC</p>
       
       <div class="jewel-fireworks-bar">
-        <button class="jewel-trigger-btn" data-theme="gold">🌟 Imperial Gold</button>
-        <button class="jewel-trigger-btn" data-theme="teal">💎 Peacock Teal</button>
-        <button class="jewel-trigger-btn" data-theme="pink">🌸 Lotus Pink</button>
-        <button class="jewel-trigger-btn" data-theme="violet">💜 Royal Violet</button>
+        <button class="jewel-trigger-btn" data-theme="gold">IMPERIAL GOLD</button>
+        <button class="jewel-trigger-btn" data-theme="teal">PEACOCK TEAL</button>
+        <button class="jewel-trigger-btn" data-theme="pink">LOTUS PINK</button>
+        <button class="jewel-trigger-btn" data-theme="violet">ROYAL VIOLET</button>
       </div>
 
       <div class="wish-capsule-box">
         <input type="text" id="wish-input" placeholder="Type a Diwali wish to release into the sky..." maxlength="120">
       </div>
-      <button class="awaken-light-btn" id="release-wish-btn" style="margin-top: 15px;">RELEASE TO THE STARS ✦</button>
+      <button class="luxury-action-btn" id="release-wish-btn" style="margin-top: 14px;">RELEASE WISH</button>
       
-      <div id="wishes-log" style="margin-top: 18px; font-size: 13px; color: var(--color-gold); opacity: 0.9;"></div>
+      <div id="wishes-log" style="margin-top: 16px; font-size: 12.5px; color: var(--color-gold); opacity: 0.9;"></div>
     </section>
 
   </main>
 
-  <!-- Integrated Scene Progress Navigation -->
+  <!-- Integrated Luxury Progress Bar (Zero Emojis) -->
   <nav id="scene-progress-bar" aria-label="Scene Navigation">
-    <div class="scene-step-pill active" data-step="1">01 <span class="step-title">&bull; The First Light</span></div>
-    <div class="scene-step-pill" data-step="2">02 <span class="step-title">&bull; Rangoli of Wishes</span></div>
-    <div class="scene-step-pill" data-step="3">03 <span class="step-title">&bull; Garden of Light</span></div>
-    <div class="scene-step-pill" data-step="4">04 <span class="step-title">&bull; A Quiet Wish</span></div>
-    <div class="scene-step-pill" data-step="5">05 <span class="step-title">&bull; Celestial Sky</span></div>
+    <div class="scene-step-pill active" data-step="1">01 <span class="step-title">/ The First Light</span></div>
+    <div class="scene-step-pill" data-step="2">02 <span class="step-title">/ Rangoli of Wishes</span></div>
+    <div class="scene-step-pill" data-step="3">03 <span class="step-title">/ Garden of Light</span></div>
+    <div class="scene-step-pill" data-step="4">04 <span class="step-title">/ A Quiet Wish</span></div>
+    <div class="scene-step-pill" data-step="5">05 <span class="step-title">/ Celestial Sky</span></div>
   </nav>
 
   <script type="module" src="./src/main.js"></script>
