@@ -1,0 +1,473 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,600;0,800;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg-void: #050711;
+  --bg-indigo: #0a0d24;
+  --gold-primary: #d4af37;
+  --gold-light: #fef08a;
+  --gold-glow: rgba(212, 175, 55, 0.4);
+  --flame-amber: #ff9d3d;
+  --text-white: #fdfbf7;
+  --text-muted: rgba(253, 251, 247, 0.65);
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-title: 'Cinzel Decorative', serif;
+  --font-hand: 'Great Vibes', cursive;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-void);
+  background: radial-gradient(circle at 50% 40%, #111438 0%, #080a1c 60%, var(--bg-void) 100%);
+  font-family: var(--font-sans);
+  color: var(--text-white);
+}
+
+/* Vignette & Cinematic Overlay */
+#cinematic-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(5, 7, 17, 0.75) 90%);
+  z-index: 10;
+}
+
+/* Canvases */
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#bg-canvas { z-index: 1; }
+#thread-canvas { z-index: 2; pointer-events: none; }
+#diya-canvas { z-index: 3; pointer-events: none; }
+#fireworks-canvas { z-index: 4; pointer-events: none; }
+
+/* Top Floating Bar */
+#top-bar {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 30;
+}
+
+.brand-badge {
+  font-family: var(--font-title);
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--gold-light);
+  opacity: 0.85;
+  text-shadow: 0 0 10px var(--gold-glow);
+}
+
+.control-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: var(--gold-light);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  letter-spacing: 1px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s var(--ease-cinematic);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.control-btn:hover, .control-btn:active {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--gold-primary);
+  transform: scale(1.05);
+}
+
+/* Chapter Container */
+#chapter-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.chapter-view {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 24px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px) scale(0.98);
+  transition: opacity 1.2s var(--ease-cinematic), transform 1.2s var(--ease-cinematic), visibility 1.2s;
+  pointer-events: none;
+}
+
+.chapter-view.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Typography Elements */
+.whisper-quote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(18px, 4vw, 26px);
+  color: var(--text-white);
+  line-height: 1.6;
+  max-width: 580px;
+  margin-bottom: 24px;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+
+.sub-whisper {
+  font-size: clamp(12px, 2.8vw, 15px);
+  color: var(--gold-light);
+  letter-spacing: 2px;
+  font-family: var(--font-sans);
+  margin-bottom: 30px;
+  opacity: 0.9;
+}
+
+.highlight-name {
+  font-family: var(--font-title);
+  color: var(--gold-light);
+  font-weight: 700;
+  text-shadow: 0 0 15px var(--gold-primary);
+}
+
+/* Breathing & Touch Ignition Pulse */
+.ignite-action-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.breath-halo-btn {
+  position: relative;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 157, 61, 0.3) 0%, rgba(212, 175, 55, 0.1) 70%, transparent 100%);
+  border: 1px solid var(--gold-primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 0 25px var(--gold-glow);
+  animation: pulseBreathing 3s infinite ease-in-out;
+  transition: transform 0.4s var(--ease-cinematic);
+}
+
+.breath-halo-btn:hover {
+  transform: scale(1.12);
+}
+
+.inner-spark-icon {
+  font-size: 26px;
+  filter: drop-shadow(0 0 8px #ffaa00);
+}
+
+@keyframes pulseBreathing {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 35px rgba(255, 157, 61, 0.6);
+  }
+}
+
+/* Navigation Arrow & Continue Button */
+.gold-proceed-btn {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(255, 157, 61, 0.2) 100%);
+  border: 1px solid var(--gold-primary);
+  color: var(--gold-light);
+  padding: 12px 30px;
+  border-radius: 30px;
+  font-family: var(--font-title);
+  font-size: 13px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
+  backdrop-filter: blur(8px);
+  margin-top: 24px;
+  transition: all 0.4s var(--ease-cinematic);
+}
+
+.gold-proceed-btn:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.4) 0%, rgba(255, 157, 61, 0.35) 100%);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+}
+
+/* Scratch Foil Royal Letter Chapter */
+.letter-outer-card {
+  position: relative;
+  width: min(90vw, 440px);
+  min-height: 400px;
+  background: rgba(18, 14, 28, 0.9);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 16px;
+  padding: 30px 24px;
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.9), 0 0 30px rgba(212, 175, 55, 0.15);
+  backdrop-filter: blur(15px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+#scratch-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 15;
+  border-radius: 16px;
+  cursor: crosshair;
+}
+
+.letter-content {
+  position: relative;
+  z-index: 10;
+  text-align: left;
+  width: 100%;
+}
+
+.letter-salutation {
+  font-family: var(--font-title);
+  color: var(--gold-light);
+  font-size: 16px;
+  margin-bottom: 16px;
+  letter-spacing: 1.5px;
+}
+
+.letter-body {
+  font-family: var(--font-hand);
+  font-size: clamp(21px, 4.5vw, 25px);
+  color: #fff9e6;
+  line-height: 1.55;
+  margin-bottom: 20px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}
+
+.letter-signature {
+  font-family: var(--font-title);
+  color: var(--gold-primary);
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-align: right;
+  margin-top: 15px;
+}
+
+/* Wax Seal Button */
+.wax-seal-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #991b1b, #450a0a);
+  border: 2px solid #b91c1c;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.8), 0 0 15px rgba(220, 38, 38, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  margin: 15px auto 0;
+  transition: transform 0.3s var(--ease-cinematic);
+}
+
+.wax-seal-btn:hover {
+  transform: scale(1.1);
+}
+
+.wax-seal-icon {
+  font-size: 24px;
+}
+
+/* Fireworks Interactive Dashboard */
+.fireworks-control-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.firework-tap-trigger {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--gold-primary);
+  color: var(--gold-light);
+  padding: 10px 18px;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.firework-tap-trigger:hover {
+  background: rgba(212, 175, 55, 0.25);
+}
+
+/* Sky Lantern / Wish Chapter */
+.lantern-input-box {
+  width: min(85vw, 360px);
+  margin-top: 20px;
+}
+
+.lantern-input-box input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 24px;
+  padding: 14px 20px;
+  color: var(--text-white);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+  transition: border-color 0.3s ease;
+}
+
+.lantern-input-box input:focus {
+  border-color: var(--gold-light);
+  box-shadow: 0 0 20px var(--gold-glow);
+}
+
+.floating-lantern-preview {
+  font-size: 50px;
+  filter: drop-shadow(0 0 20px #ffaa00);
+  animation: floatLantern 4s infinite ease-in-out;
+  margin-bottom: 12px;
+}
+
+@keyframes floatLantern {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-12px) rotate(2deg); }
+}
+
+/* Chapter Progress Dots */
+#chapter-dots {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 30;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transition: all 0.4s var(--ease-cinematic);
+}
+
+.dot.active {
+  background: var(--gold-light);
+  box-shadow: 0 0 10px var(--gold-primary);
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* Hidden Easter Egg Star in bottom corner */
+#easter-egg-star {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: rgba(255, 235, 140, 0.3);
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 35;
+  transition: color 0.5s ease;
+}
+
+#easter-egg-star:hover {
+  color: var(--gold-light);
+  filter: drop-shadow(0 0 8px var(--gold-primary));
+}
+
+/* Secret Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 17, 0.92);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s var(--ease-cinematic);
+  padding: 24px;
+}
+
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background: #100b1a;
+  border: 1px solid var(--gold-primary);
+  border-radius: 20px;
+  padding: 32px 24px;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
+}
+
+.secret-code-pill {
+  display: inline-block;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px dashed var(--gold-primary);
+  color: var(--gold-light);
+  padding: 8px 18px;
+  border-radius: 12px;
+  font-family: monospace;
+  font-size: 15px;
+  letter-spacing: 2px;
+  margin: 18px 0;
+}
