@@ -34,7 +34,7 @@ class ExperienceApp {
     // 1. Initialize Single Master World Engine
     this.world = new WorldEngine(this.canvas);
     this.world.onRingComplete = (idx) => this.updateRangoliWish(idx);
-    this.world.loop(); // Single unified RAF loop
+    this.world.start(); // Single unified RAF loop
 
     // 2. Bind DOM Events
     this.bindEvents();
