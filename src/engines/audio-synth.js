@@ -251,6 +251,11 @@ class AudioSynthesizer {
     noiseGain.connect(this.masterGain);
     noise.start(now);
   }
+
+  // Alias for cinematic firework burst boom
+  playBurstBoom() {
+    this.playFireworkBurst('large');
+  }
 }
 
 export const audioSynth = new AudioSynthesizer();

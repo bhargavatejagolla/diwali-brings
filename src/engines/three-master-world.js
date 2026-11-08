@@ -1,16 +1,20 @@
 /**
- * ThreeMasterWorld — Photorealistic Procedural 3D WebGL Living World (Three.js r187)
- * Zero Static Images. Real Volumetric Water, Textured 3D Diya, Marigold Flowers,
- * Sacred Rangoli Mandala, Akash Kandil Lanterns, and 3-Layer Nishiki Kamuro Pyrotechnics.
+ * ThreeMasterWorld — World-Class Photorealistic 3D Living WebGL Environment (Three.js r187)
+ * Zero Static Images. Real-Time UnrealBloomPass Optical Post-Processing,
+ * Physically Modeled Terracotta Diya with Procedural Teardrop Flame & Ghee Oil Layer,
+ * Sacred Rangoli Mandala on Polished Indian Marble, Akash Kandil Sky Lanterns,
+ * and a 5-Shell Physical Pyrotechnic Fireworks Simulation Engine.
  * Dedicated to Dharji Shravya — Locked 60/120 FPS Performance.
  */
 
 import * as THREE from 'three';
-import { gsap } from 'gsap';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { TextureGenerator } from './texture-generator.js';
 import { audioSynth } from './audio-synth.js';
 import { haptics } from '../interactions/haptics.js';
-import { tilt } from '../interactions/tilt.js';
-import { TextureGenerator } from './texture-generator.js';
+import { gsap } from 'gsap';
 
 export class ThreeMasterWorld {
   constructor(canvas) {
@@ -18,39 +22,52 @@ export class ThreeMasterWorld {
     this.width = window.innerWidth;
     this.height = window.innerHeight;
     this.dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+
     this.currentScene = 1;
     this.time = 0;
     this.lastTime = performance.now();
     this.running = false;
     this.rafId = null;
 
+    // Gyroscope / mouse tilt parallax
+    this.targetTiltX = 0;
+    this.targetTiltY = 0;
+    this.currentTiltX = 0;
+    this.currentTiltY = 0;
+
     // Three.js Core Foundation
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x040716, 0.015);
+    // Warm midnight atmospheric haze
+    this.scene.fog = new THREE.FogExp2(0x0a102c, 0.0075);
 
     this.camera = new THREE.PerspectiveCamera(46, this.width / this.height, 0.1, 1000);
-    this.cameraTarget = new THREE.Vector3(0, 1.2, 0);
-    this.currentCameraLookAt = new THREE.Vector3(0, 1.2, 0);
+    this.cameraTarget = new THREE.Vector3(0, 0.65, 0);
+    this.currentCameraLookAt = new THREE.Vector3().copy(this.cameraTarget);
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
       antialias: true,
+      alpha: false,
       powerPreference: 'high-performance',
-      alpha: false
+      stencil: false,
+      depth: true
     });
     this.renderer.setSize(this.width, this.height);
     this.renderer.setPixelRatio(this.dpr);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.35;
-    this.renderer.setClearColor(0x040716, 1.0);
+    this.renderer.setClearColor(0x060c24, 1.0);
+
+    // UnrealBloomPass Post-Processing Pipeline
+    this.initPostProcessing();
 
     // Camera viewpoints for each scene
     this.sceneViewpoints = {
-      1: { pos: new THREE.Vector3(0, 2.6, 9.8), target: new THREE.Vector3(0, 0.6, 0) },
-      2: { pos: new THREE.Vector3(0, 13.5, 12.0), target: new THREE.Vector3(0, -0.4, 0) },
-      3: { pos: new THREE.Vector3(0, 4.2, 18.0), target: new THREE.Vector3(0, 3.2, 0) },
-      4: { pos: new THREE.Vector3(0, 2.0, 9.0), target: new THREE.Vector3(0, 0.9, 0) },
-      5: { pos: new THREE.Vector3(0, 6.5, 23.0), target: new THREE.Vector3(0, 16.0, -8.0) }
+      1: { pos: new THREE.Vector3(0, 2.4, 9.2), target: new THREE.Vector3(0, 0.65, 0) },
+      2: { pos: new THREE.Vector3(0, 13.0, 11.5), target: new THREE.Vector3(0, -0.2, 0) },
+      3: { pos: new THREE.Vector3(0, 4.2, 18.5), target: new THREE.Vector3(0, 3.5, 0) },
+      4: { pos: new THREE.Vector3(0, 1.8, 8.5), target: new THREE.Vector3(0, 0.85, 0) },
+      5: { pos: new THREE.Vector3(0, 6.0, 23.0), target: new THREE.Vector3(0, 17.5, -8.0) }
     };
 
     this.camera.position.copy(this.sceneViewpoints[1].pos);
@@ -61,11 +78,12 @@ export class ThreeMasterWorld {
     this.initLighting();
     this.initCosmicSkyDome();
     this.initStarfield();
-    this.initPalaceSilhouettes();
-    this.initReflectiveWater();
+    this.initPalaceArchitecture();
+    this.initPolishedMarbleTerrace();
+    this.initAtmosphericParticles();
 
-    // Initialize Rich Scene Geometries
-    this.initScene1DiyaAndMarigolds();
+    // Initialize Scene Geometries
+    this.initScene1HeroDiya();
     this.initScene2RangoliAltar();
     this.initScene3PalaceGarden();
     this.initScene5FireworksEngine();
@@ -74,25 +92,51 @@ export class ThreeMasterWorld {
   }
 
   // ----------------------------------------------------
-  // 1. MASTER LIGHTING & ATMOSPHERE
+  // 1. CINEMATIC POST-PROCESSING (UNREAL BLOOM)
+  // ----------------------------------------------------
+
+  initPostProcessing() {
+    const renderScene = new RenderPass(this.scene, this.camera);
+
+    // Optical bloom: blooms bright flame cores, fireworks, and lanterns with golden aura
+    this.bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(this.width, this.height),
+      1.3,  // strength
+      0.55, // radius
+      0.72  // threshold (only emissive lights bloom)
+    );
+
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(renderScene);
+    this.composer.addPass(this.bloomPass);
+  }
+
+  // ----------------------------------------------------
+  // 2. MASTER LIGHTING & CELESTIAL ATMOSPHERE
   // ----------------------------------------------------
 
   initLighting() {
-    this.ambientLight = new THREE.AmbientLight(0x0f1838, 1.35);
+    // Rich royal ambient light (deep midnight indigo & sapphire)
+    this.ambientLight = new THREE.AmbientLight(0x1a2656, 1.6);
     this.scene.add(this.ambientLight);
 
-    // Celestial moonlight
-    this.moonLight = new THREE.DirectionalLight(0x9fc3e8, 1.2);
+    // Celestial moonlight from above
+    this.moonLight = new THREE.DirectionalLight(0xb0d2f8, 1.25);
     this.moonLight.position.set(25, 45, 30);
     this.scene.add(this.moonLight);
 
+    // Warm golden festival horizon fill light
+    this.warmFillLight = new THREE.DirectionalLight(0xffaa44, 0.85);
+    this.warmFillLight.position.set(-20, 25, 10);
+    this.scene.add(this.warmFillLight);
+
     // Dynamic warm Point Light from Diya Flame
-    this.diyaLight = new THREE.PointLight(0xffa834, 5.0, 40, 1.3);
+    this.diyaLight = new THREE.PointLight(0xffa228, 5.5, 45, 1.2);
     this.diyaLight.position.set(0.68, 1.5, 0);
     this.scene.add(this.diyaLight);
 
-    // Grand explosive flash for fireworks
-    this.fireworkFlashLight = new THREE.PointLight(0xfff0d6, 0.0, 200, 1.1);
+    // Grand explosive flash for fireworks (illuminates sky and palace)
+    this.fireworkFlashLight = new THREE.PointLight(0xffeedd, 0.0, 260, 1.1);
     this.fireworkFlashLight.position.set(0, 24, -6);
     this.scene.add(this.fireworkFlashLight);
   }
@@ -100,36 +144,42 @@ export class ThreeMasterWorld {
   initCosmicSkyDome() {
     const skyGeo = new THREE.SphereGeometry(380, 32, 16);
     const skyMat = new THREE.ShaderMaterial({
-      side: THREE.BackSide,
       uniforms: {
-        topColor: { value: new THREE.Color(0x0c1332) },
-        bottomColor: { value: new THREE.Color(0x030510) },
-        horizonColor: { value: new THREE.Color(0x182046) },
-        offset: { value: 15 },
-        exponent: { value: 0.65 }
+        topColor: { value: new THREE.Color(0x060c24) },
+        midColor: { value: new THREE.Color(0x161e46) },
+        horizonColor: { value: new THREE.Color(0x352654) }, // Festival horizon glow
+        cityGlowColor: { value: new THREE.Color(0x7c3b16) } // Distant city diya glow
       },
       vertexShader: `
         varying vec3 vWorldPosition;
         void main() {
           vec4 worldPosition = modelMatrix * vec4(position, 1.0);
           vWorldPosition = worldPosition.xyz;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          gl_Position = projectionMatrix * viewMatrix * worldPosition;
         }
       `,
       fragmentShader: `
         uniform vec3 topColor;
-        uniform vec3 bottomColor;
+        uniform vec3 midColor;
         uniform vec3 horizonColor;
-        uniform float offset;
-        uniform float exponent;
+        uniform vec3 cityGlowColor;
         varying vec3 vWorldPosition;
+
         void main() {
-          float h = normalize(vWorldPosition + offset).y;
-          vec3 sky = mix(bottomColor, horizonColor, max(pow(max(h, 0.0), 0.45), 0.0));
-          sky = mix(sky, topColor, max(pow(max(h, 0.0), exponent), 0.0));
-          gl_FragColor = vec4(sky, 1.0);
+          float h = normalize(vWorldPosition).y;
+          vec3 col;
+          if (h > 0.3) {
+            col = mix(midColor, topColor, (h - 0.3) / 0.7);
+          } else if (h > 0.05) {
+            col = mix(horizonColor, midColor, (h - 0.05) / 0.25);
+          } else {
+            col = mix(cityGlowColor, horizonColor, max((h + 0.1) / 0.15, 0.0));
+          }
+          gl_FragColor = vec4(col, 1.0);
         }
-      `
+      `,
+      side: THREE.BackSide,
+      depthWrite: false
     });
 
     this.skyDome = new THREE.Mesh(skyGeo, skyMat);
@@ -137,216 +187,275 @@ export class ThreeMasterWorld {
   }
 
   initStarfield() {
-    const starCount = 1600;
-    const geometry = new THREE.BufferGeometry();
+    const starCount = 2200;
+    const starGeo = new THREE.BufferGeometry();
     const positions = new Float32Array(starCount * 3);
     const colors = new Float32Array(starCount * 3);
+    const sizes = new Float32Array(starCount);
+
+    const goldStar = new THREE.Color(0xfff3d4);
+    const cyanStar = new THREE.Color(0xd6eaff);
+    const sapphireStar = new THREE.Color(0x99bbff);
 
     for (let i = 0; i < starCount; i++) {
       const u = Math.random();
       const v = Math.random();
       const theta = u * 2.0 * Math.PI;
-      const phi = Math.acos(2.0 * v - 1.0) * 0.48;
-      const r = 280 + Math.random() * 70;
+      const phi = Math.acos(2.0 * v - 1.0);
+      const r = 260 + Math.random() * 80;
 
-      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = Math.abs(r * Math.cos(phi)) + 8;
-      positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+      const y = Math.abs(r * Math.cos(phi)) + 12;
+      const x = r * Math.sin(phi) * Math.sin(theta);
+      const z = r * Math.sin(phi) * Math.cos(theta);
 
-      const c = Math.random();
-      if (c > 0.65) {
-        colors[i * 3] = 0.98; colors[i * 3 + 1] = 0.88; colors[i * 3 + 2] = 0.55; // Warm amber
-      } else if (c > 0.3) {
-        colors[i * 3] = 0.85; colors[i * 3 + 1] = 0.94; colors[i * 3 + 2] = 1.0;  // Celestial sapphire
-      } else {
-        colors[i * 3] = 1.0; colors[i * 3 + 1] = 1.0; colors[i * 3 + 2] = 1.0;   // Diamond white
-      }
+      positions[i * 3] = x;
+      positions[i * 3 + 1] = y;
+      positions[i * 3 + 2] = z;
+
+      let c = goldStar;
+      if (Math.random() > 0.6) c = cyanStar;
+      else if (Math.random() > 0.85) c = sapphireStar;
+
+      colors[i * 3] = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
+
+      sizes[i] = 1.4 + Math.random() * 2.2;
     }
 
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    starGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    starGeo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
 
-    const starMaterial = new THREE.PointsMaterial({
-      size: 2.2,
+    const sparkTex = TextureGenerator.createSparkGlowTexture();
+    const starMat = new THREE.PointsMaterial({
+      map: sparkTex,
+      size: 2.4,
       vertexColors: true,
       transparent: true,
-      opacity: 0.92,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
       sizeAttenuation: true
     });
 
-    this.starFieldMesh = new THREE.Points(geometry, starMaterial);
-    this.scene.add(this.starFieldMesh);
+    this.starPoints = new THREE.Points(starGeo, starMat);
+    this.scene.add(this.starPoints);
   }
 
-  initPalaceSilhouettes() {
+  // ----------------------------------------------------
+  // 3. MAJESTIC INDIAN PALACE ARCHITECTURE (AT DISTANCE)
+  // ----------------------------------------------------
+
+  initPalaceArchitecture() {
     this.palaceGroup = new THREE.Group();
-    const stoneTex = TextureGenerator.createSandstoneTexture();
-    const palaceMat = new THREE.MeshStandardMaterial({
-      map: stoneTex,
-      color: 0x161e38,
-      roughness: 0.9,
-      metalness: 0.1
+    const sandstoneMat = new THREE.MeshStandardMaterial({
+      color: 0x1e1934,
+      roughness: 0.82,
+      metalness: 0.12
     });
 
-    // Central Grand Palace Dome
-    const domeGeo = new THREE.SphereGeometry(15, 24, 24, 0, Math.PI * 2, 0, Math.PI * 0.5);
-    const mainDome = new THREE.Mesh(domeGeo, palaceMat);
-    mainDome.position.set(0, 14, -75);
+    const windowGlowMat = new THREE.MeshBasicMaterial({
+      color: 0xffa433,
+      transparent: true,
+      opacity: 0.8
+    });
 
-    const baseGeo = new THREE.CylinderGeometry(15, 15, 14, 24);
-    const mainBase = new THREE.Mesh(baseGeo, palaceMat);
-    mainBase.position.set(0, 6, -75);
-    this.palaceGroup.add(mainDome, mainBase);
+    // Central Grand Rajput Jharokha Pavilion (at majestic distance z = -48)
+    const domeGeo = new THREE.SphereGeometry(14, 32, 24, 0, Math.PI * 2, 0, Math.PI * 0.5);
+    const mainDome = new THREE.Mesh(domeGeo, sandstoneMat);
+    mainDome.position.set(0, 16, -48);
 
-    // Left and Right Symmetrical Minarets & Chatris
-    const chatriOffsets = [-38, -22, 22, 38];
+    // Golden Kalash Finial Spire
+    const spireGeo = new THREE.CylinderGeometry(0.2, 0.8, 4.5, 12);
+    const spireMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.8, roughness: 0.2 });
+    const kalash = new THREE.Mesh(spireGeo, spireMat);
+    kalash.position.set(0, 31, -48);
+
+    const baseGeo = new THREE.CylinderGeometry(14, 14, 12, 32);
+    const mainBase = new THREE.Mesh(baseGeo, sandstoneMat);
+    mainBase.position.set(0, 8, -48);
+
+    this.palaceGroup.add(mainDome, kalash, mainBase);
+
+    // Left and Right Symmetrical Minarets & Chatris (Graceful proportions)
+    const chatriOffsets = [-36, -20, 20, 36];
     chatriOffsets.forEach(x => {
-      const pCyl = new THREE.CylinderGeometry(2.4, 2.8, 26, 16);
-      const pillar = new THREE.Mesh(pCyl, palaceMat);
-      pillar.position.set(x, 9, -70);
+      const pCyl = new THREE.CylinderGeometry(2.2, 2.6, 24, 16);
+      const pillar = new THREE.Mesh(pCyl, sandstoneMat);
+      pillar.position.set(x, 10, -46);
 
-      const pDome = new THREE.SphereGeometry(3.8, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5);
-      const smallDome = new THREE.Mesh(pDome, palaceMat);
-      smallDome.position.set(x, 22, -70);
+      const pDome = new THREE.SphereGeometry(3.4, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.5);
+      const smallDome = new THREE.Mesh(pDome, sandstoneMat);
+      smallDome.position.set(x, 22.5, -46);
 
-      this.palaceGroup.add(pillar, smallDome);
+      const pSpire = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.35, 2.5, 8), spireMat);
+      pSpire.position.set(x, 26.5, -46);
+
+      this.palaceGroup.add(pillar, smallDome, pSpire);
     });
 
-    // Palace Wall with Arched Openings
-    const wallGeo = new THREE.BoxGeometry(120, 10, 4);
-    const wall = new THREE.Mesh(wallGeo, palaceMat);
-    wall.position.set(0, 3, -68);
+    // Palace Terrace Parapet Wall lined with 36 Small Glowing Earthen Diyas
+    const wallGeo = new THREE.BoxGeometry(110, 3.2, 3.2);
+    const wall = new THREE.Mesh(wallGeo, sandstoneMat);
+    wall.position.set(0, 1.6, -42);
     this.palaceGroup.add(wall);
+
+    const sparkTex = TextureGenerator.createSparkGlowTexture();
+    const parapetFlameMat = new THREE.SpriteMaterial({
+      map: sparkTex,
+      color: 0xffa422,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const diyaCount = 36;
+    for (let i = 0; i < diyaCount; i++) {
+      const x = -50 + (i / (diyaCount - 1)) * 100;
+      const flameSprite = new THREE.Sprite(parapetFlameMat);
+      flameSprite.position.set(x, 3.6, -41.5);
+      flameSprite.scale.set(0.85, 1.1, 1);
+      this.palaceGroup.add(flameSprite);
+    }
 
     this.scene.add(this.palaceGroup);
   }
 
-  initReflectiveWater() {
-    const waterGeo = new THREE.PlaneGeometry(180, 180, 80, 80);
-    
-    this.waterMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        time: { value: 0 },
-        flamePos: { value: new THREE.Vector3(0.68, 1.5, 0) },
-        flameColor: { value: new THREE.Color(0xffa834) },
-        waterColor: { value: new THREE.Color(0x040816) },
-        rippleCenter: { value: new THREE.Vector2(0, 0) },
-        rippleTime: { value: -10.0 }
-      },
-      vertexShader: `
-        uniform float time;
-        uniform vec2 rippleCenter;
-        uniform float rippleTime;
-        varying vec3 vWorldPos;
-        varying vec3 vNormal;
-        varying vec2 vUv;
+  initPolishedMarbleTerrace() {
+    // Polished Royal Courtyard Floor reflecting warm lights
+    const terraceGeo = new THREE.PlaneGeometry(160, 160);
+    const marbleTex = TextureGenerator.createMarbleFloorTexture();
 
-        void main() {
-          vUv = uv;
-          vec3 pos = position;
-          
-          // Gentle fluid surface wave simulation
-          float w1 = sin(pos.x * 0.28 + time * 1.5) * 0.14;
-          float w2 = cos(pos.y * 0.24 + time * 1.3) * 0.12;
-          
-          // Dynamic circular ripple wave
-          float rDist = length(pos.xy - rippleCenter);
-          float rAge = time - rippleTime;
-          float ripple = 0.0;
-          if (rAge > 0.0 && rAge < 4.0) {
-            float waveR = rAge * 9.0;
-            float diff = abs(rDist - waveR);
-            if (diff < 3.5) {
-              ripple = sin((rDist - waveR) * 2.0) * exp(-rAge * 0.8) * 0.35;
-            }
-          }
-
-          pos.z += w1 + w2 + ripple;
-
-          vec4 worldPos = modelMatrix * vec4(pos, 1.0);
-          vWorldPos = worldPos.xyz;
-          vNormal = normalize(normalMatrix * vec3(-(w1 + ripple) * 0.6, -(w2 + ripple) * 0.6, 1.0));
-          gl_Position = projectionMatrix * viewMatrix * worldPos;
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 flamePos;
-        uniform vec3 flameColor;
-        uniform vec3 waterColor;
-        uniform float time;
-        varying vec3 vWorldPos;
-        varying vec3 vNormal;
-        varying vec2 vUv;
-
-        void main() {
-          // Specular highlights from Diya flame (golden path reflecting on holy river)
-          vec3 lightDir = normalize(flamePos - vWorldPos);
-          vec3 viewDir = normalize(cameraPosition - vWorldPos);
-          vec3 halfDir = normalize(lightDir + viewDir);
-
-          float dist = length(flamePos - vWorldPos);
-          float lightAttenuation = 1.0 / (1.0 + 0.05 * dist * dist);
-
-          float spec = pow(max(dot(vNormal, halfDir), 0.0), 38.0);
-          vec3 specular = flameColor * spec * 3.6 * lightAttenuation;
-
-          // Deep water body with golden reflection path
-          vec3 ambientReflection = vec3(0.03, 0.06, 0.14) + flameColor * (0.35 * lightAttenuation);
-          vec3 finalColor = waterColor + ambientReflection + specular;
-
-          gl_FragColor = vec4(finalColor, 0.95);
-        }
-      `,
-      transparent: true
+    const terraceMat = new THREE.MeshStandardMaterial({
+      map: marbleTex,
+      color: 0x121832,
+      roughness: 0.18,
+      metalness: 0.42
     });
 
-    this.waterMesh = new THREE.Mesh(waterGeo, this.waterMaterial);
-    this.waterMesh.rotation.x = -Math.PI / 2;
-    this.waterMesh.position.y = -0.05;
-    this.scene.add(this.waterMesh);
+    this.terraceMesh = new THREE.Mesh(terraceGeo, terraceMat);
+    this.terraceMesh.rotation.x = -Math.PI / 2;
+    this.terraceMesh.position.y = 0;
+    this.scene.add(this.terraceMesh);
+  }
+
+  initAtmosphericParticles() {
+    // 250 Floating Golden Stardust Motes drifting across the terrace
+    const count = 250;
+    this.stardustGeo = new THREE.BufferGeometry();
+    this.stardustPositions = new Float32Array(count * 3);
+    this.stardustData = [];
+
+    for (let i = 0; i < count; i++) {
+      const x = (Math.random() - 0.5) * 60;
+      const y = Math.random() * 18 + 0.5;
+      const z = (Math.random() - 0.5) * 50 - 5;
+
+      this.stardustPositions[i * 3] = x;
+      this.stardustPositions[i * 3 + 1] = y;
+      this.stardustPositions[i * 3 + 2] = z;
+
+      this.stardustData.push({
+        vx: (Math.random() - 0.5) * 0.015,
+        vy: 0.012 + Math.random() * 0.02,
+        vz: (Math.random() - 0.5) * 0.015
+      });
+    }
+
+    this.stardustGeo.setAttribute('position', new THREE.BufferAttribute(this.stardustPositions, 3));
+    const sparkTex = TextureGenerator.createSparkGlowTexture();
+    const stardustMat = new THREE.PointsMaterial({
+      map: sparkTex,
+      size: 1.4,
+      color: 0xffd97d,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true
+    });
+
+    this.stardustPoints = new THREE.Points(this.stardustGeo, stardustMat);
+    this.scene.add(this.stardustPoints);
   }
 
   // ----------------------------------------------------
-  // 2. SCENE 1: AUTHENTIC 3D CLAY DIYA & FRESH MARIGOLDS
+  // 4. SCENE 1: PHOTOREALISTIC HERO CLAY DIYA & FLAME
   // ----------------------------------------------------
 
-  initScene1DiyaAndMarigolds() {
+  initScene1HeroDiya() {
     this.diyaGroup = new THREE.Group();
+    this.diyaGroup.position.set(0, 0, 0);
 
-    // 1. Procedural 3D Terracotta Diya with Brass Inlay
+    // 1. Handcrafted Heavy Brass Pooja Thali Base
+    const thaliGeo = new THREE.CylinderGeometry(5.2, 5.4, 0.18, 48);
+    const thaliMat = new THREE.MeshStandardMaterial({
+      color: 0xd4a017,
+      metalness: 0.85,
+      roughness: 0.22
+    });
+    const thali = new THREE.Mesh(thaliGeo, thaliMat);
+    thali.position.set(0, 0.09, 0);
+    this.diyaGroup.add(thali);
+
+    // 2. Authentic Terracotta Clay Diya Bowl with Pinched Spout
     const points = [];
     points.push(new THREE.Vector2(0, 0));
-    points.push(new THREE.Vector2(1.4, 0.08));
-    points.push(new THREE.Vector2(2.1, 0.42));
-    points.push(new THREE.Vector2(2.4, 0.85));
-    points.push(new THREE.Vector2(2.55, 1.1));  // Rolled lip
-    points.push(new THREE.Vector2(2.25, 1.05));
-    points.push(new THREE.Vector2(1.65, 0.65));
-    points.push(new THREE.Vector2(0.6, 0.28));
-    points.push(new THREE.Vector2(0, 0.25));
+    points.push(new THREE.Vector2(1.3, 0.08));
+    points.push(new THREE.Vector2(2.0, 0.38));
+    points.push(new THREE.Vector2(2.35, 0.8));
+    points.push(new THREE.Vector2(2.5, 1.05)); // Rolled clay lip
+    points.push(new THREE.Vector2(2.2, 1.0));
+    points.push(new THREE.Vector2(1.6, 0.6));
+    points.push(new THREE.Vector2(0.55, 0.26));
+    points.push(new THREE.Vector2(0, 0.23));
 
     const diyaGeo = new THREE.LatheGeometry(points, 48);
     const diyaTex = TextureGenerator.createDiyaTexture();
     const diyaMat = new THREE.MeshStandardMaterial({
       map: diyaTex,
       color: 0x9e4322,
-      roughness: 0.75,
-      metalness: 0.15
+      roughness: 0.72,
+      metalness: 0.16
     });
 
     this.diyaMesh = new THREE.Mesh(diyaGeo, diyaMat);
+    this.diyaMesh.position.set(0, 0.18, 0);
     this.diyaGroup.add(this.diyaMesh);
 
-    // 2. Cotton Oil Wick with Burnt Tip
-    const wickGeo = new THREE.CylinderGeometry(0.09, 0.12, 0.7, 12);
-    const wickMat = new THREE.MeshStandardMaterial({ color: 0x1f1915, roughness: 0.9 });
+    // 3. Liquid Ghee / Mustard Oil Layer inside the bowl
+    const oilGeo = new THREE.CylinderGeometry(1.58, 1.58, 0.05, 32);
+    const oilTex = TextureGenerator.createGheeLiquidTexture();
+    const oilMat = new THREE.MeshStandardMaterial({
+      map: oilTex,
+      roughness: 0.12,
+      metalness: 0.3,
+      transparent: true,
+      opacity: 0.92
+    });
+    const oilMesh = new THREE.Mesh(oilGeo, oilMat);
+    oilMesh.position.set(0, 0.62, 0);
+    this.diyaGroup.add(oilMesh);
+
+    // 4. Hand-Rolled Cotton Oil Wick (Batti) with Charred Carbon Tip
+    const wickGeo = new THREE.CylinderGeometry(0.08, 0.11, 0.68, 12);
+    const wickMat = new THREE.MeshStandardMaterial({ color: 0x1a1410, roughness: 0.95 });
     const wick = new THREE.Mesh(wickGeo, wickMat);
-    wick.position.set(0.65, 0.76, 0);
+    wick.position.set(0.65, 0.92, 0);
     wick.rotation.z = -Math.PI * 0.18;
     this.diyaGroup.add(wick);
 
-    // 3. Multi-Layer Living Volumetric 3D Flame
-    const flameGeo = new THREE.ConeGeometry(0.48, 1.6, 24, 24);
+    // 5. Photorealistic Teardrop Flame Geometry & Custom GLSL Shader
+    // Authentic Teardrop Profile (hollow base, bulbous belly, tapered tip)
+    const flameProfile = [];
+    flameProfile.push(new THREE.Vector2(0.01, 1.6));  // Tapered tip
+    flameProfile.push(new THREE.Vector2(0.2, 1.25));
+    flameProfile.push(new THREE.Vector2(0.42, 0.75)); // Bulbous body
+    flameProfile.push(new THREE.Vector2(0.35, 0.3));
+    flameProfile.push(new THREE.Vector2(0.12, 0.0));  // Base at wick
+    flameProfile.push(new THREE.Vector2(0.01, 0.0));
+
+    const flameGeo = new THREE.LatheGeometry(flameProfile, 24);
+
     this.flameMaterial = new THREE.ShaderMaterial({
       uniforms: {
         time: { value: 0 },
@@ -363,12 +472,12 @@ export class ThreeMasterWorld {
           vY = position.y;
           vec3 pos = position;
 
-          // Organic thermal turbulence
-          float wind = sin(time * 7.0 + position.y * 3.5) * 0.09 * (position.y + 0.8);
-          float flutter = cos(time * 11.0) * 0.05 * (position.y + 0.8);
+          // Organic thermal draft flutter
+          float wind = sin(time * 7.5 + position.y * 3.5) * 0.06 * position.y;
+          float flutter = cos(time * 11.0) * 0.04 * position.y;
           pos.x += wind * flicker;
           pos.z += flutter * flicker;
-          pos.y *= 1.0 + (sin(time * 9.0) * 0.06 * flicker);
+          pos.y *= 1.0 + (sin(time * 9.0) * 0.04 * flicker);
 
           gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
         }
@@ -380,41 +489,45 @@ export class ThreeMasterWorld {
         varying float vY;
 
         void main() {
-          float t = clamp((vY + 0.8) / 1.6, 0.0, 1.0);
-          vec3 blueBase = vec3(0.12, 0.42, 1.0);
-          vec3 fieryAmber = vec3(1.0, 0.28, 0.01);
-          vec3 saffronGold = vec3(1.0, 0.72, 0.0);
-          vec3 coreWhite = vec3(1.0, 0.98, 0.92);
+          float t = clamp(vY / 1.6, 0.0, 1.0);
+          
+          // Combustion Zones:
+          vec3 blueBase = vec3(0.08, 0.35, 0.95);    // Hydrocarbon radical base
+          vec3 fieryAmber = vec3(1.0, 0.28, 0.02);   // Combustion boundary
+          vec3 saffronGold = vec3(1.0, 0.72, 0.05);  // Luminous mantle
+          vec3 coreWhite = vec3(1.0, 0.98, 0.92);    // Incandescent hot core (>1200C)
 
-          vec3 col = mix(blueBase, fieryAmber, smoothstep(0.0, 0.22, t));
-          col = mix(col, saffronGold, smoothstep(0.18, 0.65, t));
-          col = mix(col, coreWhite, smoothstep(0.5, 0.95, t));
+          vec3 col = mix(blueBase, fieryAmber, smoothstep(0.0, 0.16, t));
+          col = mix(col, saffronGold, smoothstep(0.14, 0.65, t));
+          col = mix(col, coreWhite, smoothstep(0.48, 0.92, t));
 
-          float alpha = smoothstep(0.0, 0.15, vUv.y) * smoothstep(1.0, 0.65, vUv.y) * 0.96;
-          gl_FragColor = vec4(col * (1.2 + flicker * 0.25), alpha);
+          // Soft volumetric alpha edge
+          float alpha = smoothstep(0.0, 0.12, vUv.y) * smoothstep(1.0, 0.68, vUv.y) * 0.95;
+          gl_FragColor = vec4(col * (1.3 + flicker * 0.35), alpha);
         }
       `,
       transparent: true,
       blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
+      depthWrite: false
     });
 
     this.flameMesh = new THREE.Mesh(flameGeo, this.flameMaterial);
-    this.flameMesh.position.set(0.68, 1.5, 0);
+    this.flameMesh.position.set(0.68, 0.95, 0);
     this.diyaGroup.add(this.flameMesh);
 
-    // 4. Ring of 24 Fresh Marigold Blossoms (Genda Phool) Floating around Diya
+    // 6. Garland of 28 Fresh Marigold Blossoms (Genda Phool)
     const marigoldTex = TextureGenerator.createMarigoldTexture();
     const marigoldMat = new THREE.MeshStandardMaterial({
       map: marigoldTex,
-      roughness: 0.7,
+      roughness: 0.65,
       transparent: true,
+      alphaTest: 0.05,
       side: THREE.DoubleSide
     });
-    const marigoldGeo = new THREE.PlaneGeometry(1.4, 1.4);
+    const marigoldGeo = new THREE.PlaneGeometry(1.3, 1.3);
 
-    this.marigoldRing = [];
-    const blossomCount = 20;
+    const blossomCount = 28;
     const ringRadius = 3.6;
 
     for (let i = 0; i < blossomCount; i++) {
@@ -422,27 +535,26 @@ export class ThreeMasterWorld {
       const flower = new THREE.Mesh(marigoldGeo, marigoldMat);
       flower.position.set(
         Math.cos(angle) * ringRadius,
-        0.05,
+        0.22,
         Math.sin(angle) * ringRadius
       );
       flower.rotation.x = -Math.PI / 2;
       flower.rotation.z = angle + Math.PI / 2 + (Math.random() - 0.5) * 0.4;
       this.diyaGroup.add(flower);
-      this.marigoldRing.push(flower);
     }
 
-    // 5. Rising Golden Embers from the Flame (15 pre-allocated sparks)
-    const emberCount = 18;
+    // 7. Rising Golden Embers from the Diya Flame
+    const emberCount = 24;
     this.diyaEmbersGeo = new THREE.BufferGeometry();
     this.diyaEmberPositions = new Float32Array(emberCount * 3);
     this.diyaEmberData = [];
 
     for (let i = 0; i < emberCount; i++) {
       this.diyaEmberPositions[i * 3] = 0.68;
-      this.diyaEmberPositions[i * 3 + 1] = 1.5;
+      this.diyaEmberPositions[i * 3 + 1] = 1.68;
       this.diyaEmberPositions[i * 3 + 2] = 0;
       this.diyaEmberData.push({
-        y: 1.5 + Math.random() * 2.5,
+        y: 1.68 + Math.random() * 2.8,
         speed: 0.02 + Math.random() * 0.02,
         wobble: Math.random() * 10
       });
@@ -462,33 +574,33 @@ export class ThreeMasterWorld {
     this.diyaEmbers = new THREE.Points(this.diyaEmbersGeo, emberMat);
     this.diyaGroup.add(this.diyaEmbers);
 
+    // DiyaGroup is ONLY visible in Scene 1!
+    this.diyaGroup.visible = true;
     this.scene.add(this.diyaGroup);
   }
 
   // ----------------------------------------------------
-  // 3. SCENE 2: GORGEOUS AUTHENTIC RANGOLI ALTAR
+  // 5. SCENE 2: SACRED RANGOLI ALTAR (CLEAN ALPHA)
   // ----------------------------------------------------
 
   initScene2RangoliAltar() {
     this.rangoliGroup = new THREE.Group();
-    this.rangoliGroup.position.set(0, 0.01, 0);
+    this.rangoliGroup.position.set(0, 0.02, 0);
 
-    // Stone Courtyard Altar with Complete Indian Rangoli Mandala
+    // Stone Courtyard Altar with Handcrafted Indian Rangoli Mandala
     const rangoliGeo = new THREE.CylinderGeometry(8.5, 8.8, 0.35, 64);
     const rangoliTex = TextureGenerator.createRangoliTexture();
-    const stoneTex = TextureGenerator.createSandstoneTexture();
 
-    // Top face has Rangoli, sides have carved sandstone
     const rangoliMat = new THREE.MeshStandardMaterial({
       map: rangoliTex,
-      roughness: 0.8,
-      metalness: 0.1
+      roughness: 0.78,
+      metalness: 0.12
     });
 
     this.rangoliAltar = new THREE.Mesh(rangoliGeo, rangoliMat);
     this.rangoliGroup.add(this.rangoliAltar);
 
-    // 16 Real Glowing Earthen Lamps surrounding the Rangoli
+    // 16 Real Glowing Earthen Lamps around the Rangoli Perimeter
     this.rangoliLamps = [];
     const lampCount = 16;
     const lampRadius = 7.6;
@@ -499,8 +611,9 @@ export class ThreeMasterWorld {
     const sparkTex = TextureGenerator.createSparkGlowTexture();
     const flameMat = new THREE.SpriteMaterial({
       map: sparkTex,
-      color: 0xffaa22,
-      blending: THREE.AdditiveBlending
+      color: 0xffa828,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
     });
 
     for (let i = 0; i < lampCount; i++) {
@@ -511,7 +624,6 @@ export class ThreeMasterWorld {
       const lamp = new THREE.Mesh(miniDiyaGeo, miniDiyaMat);
       lamp.position.set(x, 0.28, z);
 
-      // Glowing flame sprite
       const flameSprite = new THREE.Sprite(flameMat);
       flameSprite.position.set(0, 0.35, 0);
       flameSprite.scale.set(0.9, 1.2, 1);
@@ -526,49 +638,51 @@ export class ThreeMasterWorld {
   }
 
   // ----------------------------------------------------
-  // 4. SCENE 3: RAJPUT PALACE ARCHES & AKASH KANDIL
+  // 6. SCENE 3: ILLUMINATED PALACE TERRACE & AKASH KANDIL
+  // (NO BLOCKING PILLARS — ELEGANT OPEN COMPOSITION)
   // ----------------------------------------------------
 
   initScene3PalaceGarden() {
     this.gardenGroup = new THREE.Group();
-    const stoneTex = TextureGenerator.createSandstoneTexture();
-    const archMat = new THREE.MeshStandardMaterial({
-      map: stoneTex,
+
+    // Elegant carved Rajasthani Jali Screens positioned laterally (x = -18, 18)
+    // to frame the scene beautifully without blocking text or camera
+    const jaliTex = TextureGenerator.createJaliScreenTexture();
+    const jaliMat = new THREE.MeshStandardMaterial({
+      map: jaliTex,
+      transparent: true,
       roughness: 0.85,
-      metalness: 0.1
+      metalness: 0.1,
+      side: THREE.DoubleSide
+    });
+    const jaliGeo = new THREE.PlaneGeometry(6, 12);
+
+    [-19, 19].forEach(x => {
+      const screen = new THREE.Mesh(jaliGeo, jaliMat);
+      screen.position.set(x, 6, 2);
+      screen.rotation.y = (x < 0 ? 1 : -1) * 0.35;
+      this.gardenGroup.add(screen);
     });
 
-    // Ornate Carved Pillars
-    const pillarPositions = [-16, -8, 8, 16];
-    pillarPositions.forEach(x => {
-      const pillar = new THREE.Mesh(new THREE.BoxGeometry(2.0, 18, 2.0), archMat);
-      pillar.position.set(x, 8, 4);
-
-      // Pillar decorative capital
-      const capital = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.2, 2.8), archMat);
-      capital.position.set(x, 16.5, 4);
-      this.gardenGroup.add(pillar, capital);
-    });
-
-    // 16 Traditional Akash Kandil (Diwali Sky Lanterns) with Rice Paper Texture
+    // 24 Traditional Akash Kandil (Diwali Sky Lanterns) with Warm Inner Glow
     this.lanterns = [];
     const lanternTex = TextureGenerator.createLanternPaperTexture();
     const lanternGeo = new THREE.CylinderGeometry(0.75, 0.65, 1.6, 8);
     const lanternMat = new THREE.MeshStandardMaterial({
       map: lanternTex,
       emissive: 0xffaa33,
-      emissiveIntensity: 0.85,
-      roughness: 0.5,
+      emissiveIntensity: 0.95,
+      roughness: 0.45,
       transparent: true,
       opacity: 0.95
     });
 
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < 24; i++) {
       const lantern = new THREE.Mesh(lanternGeo, lanternMat);
       lantern.position.set(
-        (Math.random() - 0.5) * 36,
-        Math.random() * 24 + 2,
-        (Math.random() - 0.5) * 18 - 4
+        (Math.random() - 0.5) * 42,
+        Math.random() * 26 + 2,
+        (Math.random() - 0.5) * 22 - 2
       );
       lantern.userData = {
         vy: 0.025 + Math.random() * 0.02,
@@ -580,7 +694,7 @@ export class ThreeMasterWorld {
       this.lanterns.push(lantern);
     }
 
-    // 35 Floating Fresh Marigold Petals Tumbling Down
+    // 40 Tumbling Fresh Marigold Petals
     this.petals = [];
     const marigoldTex = TextureGenerator.createMarigoldTexture();
     const petalGeo = new THREE.PlaneGeometry(0.55, 0.7);
@@ -588,15 +702,16 @@ export class ThreeMasterWorld {
       map: marigoldTex,
       side: THREE.DoubleSide,
       transparent: true,
+      alphaTest: 0.05,
       roughness: 0.8
     });
 
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < 40; i++) {
       const petal = new THREE.Mesh(petalGeo, petalMat);
       petal.position.set(
-        (Math.random() - 0.5) * 32,
+        (Math.random() - 0.5) * 35,
         Math.random() * 18 + 2,
-        (Math.random() - 0.5) * 20
+        (Math.random() - 0.5) * 22
       );
       petal.userData = {
         vy: -0.03 - Math.random() * 0.025,
@@ -613,11 +728,12 @@ export class ThreeMasterWorld {
   }
 
   // ----------------------------------------------------
-  // 5. SCENE 5: HIGH-INTENSITY REALISTIC PYROTECHNICS
+  // 7. SCENE 5: COMPLETE 5-SHELL PHYSICAL PYROTECHNICS ENGINE
+  // (ROCKETS ASCEND, ILLUMINATE SKY, DETONATE MASSIVELY)
   // ----------------------------------------------------
 
   initScene5FireworksEngine() {
-    this.maxSparks = 1600;
+    this.maxSparks = 2400;
     this.sparkGeo = new THREE.BufferGeometry();
     this.sparkPositions = new Float32Array(this.maxSparks * 3);
     this.sparkColors = new Float32Array(this.maxSparks * 3);
@@ -634,14 +750,13 @@ export class ThreeMasterWorld {
     this.sparkGeo.setAttribute('color', new THREE.BufferAttribute(this.sparkColors, 3));
     this.sparkGeo.setAttribute('size', new THREE.BufferAttribute(this.sparkSizes, 1));
 
-    // Soft Gaussian Embers Texture (eliminates pixelated dots)
     const sparkTex = TextureGenerator.createSparkGlowTexture();
     const sparkMat = new THREE.PointsMaterial({
       map: sparkTex,
-      size: 4.5,
+      size: 5.2,
       vertexColors: true,
       transparent: true,
-      opacity: 0.96,
+      opacity: 0.98,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true
@@ -659,91 +774,124 @@ export class ThreeMasterWorld {
         r: 1, g: 0.85, b: 0.3,
         alpha: 0,
         decay: 0.012,
-        gravity: 0.028,
+        gravity: 0.026,
         drag: 0.978,
         isWillow: false
       });
     }
 
-    // Ascending Rocket Meshes (4 active rockets)
-    this.rocketGroup = new THREE.Group();
+    // Ascending Rocket Missiles (Pool of 8)
     this.rockets = [];
-    const rocketHeadMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const rocketGeo = new THREE.SphereGeometry(0.35, 8, 8);
+    const rocketSparkMat = new THREE.SpriteMaterial({
+      map: sparkTex,
+      color: 0xffffff,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
 
-    for (let i = 0; i < 4; i++) {
-      const rMesh = new THREE.Mesh(rocketGeo, rocketHeadMat);
-      rMesh.visible = false;
-      this.rocketGroup.add(rMesh);
+    for (let i = 0; i < 8; i++) {
+      const rSprite = new THREE.Sprite(rocketSparkMat);
+      rSprite.visible = false;
+      rSprite.scale.set(1.6, 1.6, 1);
+      this.scene.add(rSprite);
 
       this.rockets.push({
-        mesh: rMesh,
+        sprite: rSprite,
         active: false,
         x: 0, y: 0, z: 0,
-        targetY: 20,
-        theme: 'gold',
-        trail: []
+        vy: 0.45,
+        targetY: 22,
+        type: 'chrysanthemum',
+        theme: 'gold'
       });
     }
-    this.scene.add(this.rocketGroup);
   }
 
-  launchFirework(targetX = 0, targetY = 22, theme = 'gold') {
+  // ----------------------------------------------------
+  // FIREWORKS DISPATCHER & MULTI-TYPE GENERATION
+  // ----------------------------------------------------
+
+  launchFirework(targetX = 0, targetY = 22, theme = 'gold', type = 'chrysanthemum') {
     audioSynth.playRocketLaunch();
 
     let tx = targetX;
     let ty = targetY;
     if (typeof targetX === 'number' && Math.abs(targetX) > 40) {
-      tx = (targetX / this.width - 0.5) * 26;
+      tx = (targetX / this.width - 0.5) * 28;
     }
     if (typeof targetY === 'number' && targetY > 50) {
-      ty = 16 + (1.0 - targetY / this.height) * 10;
+      ty = 16 + (1.0 - targetY / this.height) * 12;
     }
 
-    // Find available rocket
     const r = this.rockets.find(rk => !rk.active) || this.rockets[0];
     r.active = true;
-    r.x = tx || (Math.random() - 0.5) * 18;
-    r.y = 0.5;
+    r.x = tx || (Math.random() - 0.5) * 20;
+    r.y = 1.0;
     r.z = -6 + (Math.random() - 0.5) * 8;
-    r.targetY = ty || 20;
+    r.vy = 0.55 + Math.random() * 0.15;
+    r.targetY = ty || (18 + Math.random() * 8);
     r.theme = theme;
-    r.mesh.visible = true;
-    r.mesh.position.set(r.x, r.y, r.z);
-
-    gsap.to(r, {
-      y: r.targetY,
-      duration: 0.95 + Math.random() * 0.3,
-      ease: 'power2.out',
-      onUpdate: () => {
-        r.mesh.position.set(r.x, r.y, r.z);
-      },
-      onComplete: () => {
-        r.active = false;
-        r.mesh.visible = false;
-        this.explodeRocket(r.x, r.y, r.z, r.theme);
-      }
-    });
+    r.type = type;
+    r.sprite.visible = true;
+    r.sprite.position.set(r.x, r.y, r.z);
   }
 
-  explodeRocket(x, y, z, theme = 'gold') {
-    audioSynth.playFireworkBurst('large');
-    haptics.fireworkBurst('large');
+  detonateFirework(x, y, z, theme, type) {
+    // 1. Play Explosive Sound with Sub-Bass & Reverb
+    audioSynth.playBurstBoom();
+    haptics.fireworkExplosion();
 
-    // Blinding atmospheric flash bloom
-    this.fireworkFlashLight.position.set(x, y, z);
-    this.fireworkFlashLight.intensity = 18.0;
-    gsap.to(this.fireworkFlashLight, { intensity: 0, duration: 0.5, ease: 'power2.out' });
+    // 2. High-Intensity Environmental Flash Light
+    if (this.fireworkFlashLight) {
+      this.fireworkFlashLight.position.set(x, y, z);
+      const flashColors = {
+        gold: 0xffe89e,
+        teal: 0x5ce6e6,
+        pink: 0xff80bf,
+        violet: 0xc49cff
+      };
+      this.fireworkFlashLight.color.setHex(flashColors[theme] || 0xffeedd);
+      this.fireworkFlashLight.intensity = 22.0;
 
-    // 4 Vivid Jewel Palettes
-    const paletteMap = {
-      gold: [[1.0, 0.95, 0.6], [1.0, 0.8, 0.1], [0.95, 0.55, 0.05]],
-      teal: [[0.1, 0.95, 0.95], [0.03, 0.75, 0.75], [1.0, 1.0, 1.0]],
-      pink: [[1.0, 0.35, 0.75], [0.92, 0.15, 0.52], [1.0, 0.85, 0.95]],
-      violet: [[0.85, 0.35, 1.0], [0.55, 0.15, 0.85], [1.0, 1.0, 1.0]]
+      gsap.to(this.fireworkFlashLight, {
+        intensity: 0,
+        duration: 0.65,
+        ease: 'power2.out'
+      });
+    }
+
+    // 3. Dispatch Pyrotechnic Spark Shells
+    const themeColors = {
+      gold: [[1.0, 0.95, 0.85], [1.0, 0.78, 0.25], [1.0, 0.5, 0.05]],
+      teal: [[0.2, 0.95, 0.9], [0.05, 0.8, 0.65], [0.1, 0.5, 0.95]],
+      pink: [[1.0, 0.45, 0.75], [1.0, 0.2, 0.5], [1.0, 0.85, 0.92]],
+      violet: [[0.78, 0.45, 1.0], [0.55, 0.2, 0.95], [0.95, 0.8, 1.0]]
     };
 
-    const colors = paletteMap[theme] || paletteMap.gold;
+    const colors = themeColors[theme] || themeColors.gold;
+
+    switch (type) {
+      case 'willow':
+        this.spawnNishikiKamuro(x, y, z, colors);
+        break;
+      case 'peacock':
+        this.spawnPeacockFan(x, y, z);
+        break;
+      case 'ring':
+        this.spawnRingShell(x, y, z, colors);
+        break;
+      case 'heart':
+        this.spawnHeartBurst(x, y, z, colors);
+        break;
+      case 'chrysanthemum':
+      default:
+        this.spawnChrysanthemum(x, y, z, colors);
+        break;
+    }
+  }
+
+  // Type A: Imperial Golden Chrysanthemum (Dense spherical expansion)
+  spawnChrysanthemum(x, y, z, colors) {
     const count = 380;
     let spawned = 0;
 
@@ -751,39 +899,161 @@ export class ThreeMasterWorld {
       const s = this.sparks[i];
       if (!s.active) {
         s.active = true;
-        s.x = x;
-        s.y = y;
-        s.z = z;
+        s.x = x; s.y = y; s.z = z;
 
-        // Spherical burst with Nishiki Kamuro cascading willow physics
-        const phi = Math.random() * Math.PI * 2;
-        const costheta = Math.random() * 2 - 1;
         const u = Math.random();
-        const theta = Math.acos(costheta);
-        const speed = Math.cbrt(u) * (0.42 + Math.random() * 0.45);
+        const v = Math.random();
+        const theta = u * 2.0 * Math.PI;
+        const phi = Math.acos(2.0 * v - 1.0);
+        const speed = 0.42 + Math.random() * 0.35;
 
-        s.vx = speed * Math.sin(theta) * Math.cos(phi);
-        s.vy = speed * Math.sin(theta) * Math.sin(phi);
-        s.vz = speed * Math.cos(theta);
+        s.vx = speed * Math.sin(phi) * Math.cos(theta);
+        s.vy = speed * Math.sin(phi) * Math.sin(theta);
+        s.vz = speed * Math.cos(phi);
 
         const col = colors[Math.floor(Math.random() * colors.length)];
-        s.r = col[0];
-        s.g = col[1];
-        s.b = col[2];
-
-        s.isWillow = theme === 'gold' && Math.random() > 0.3;
-        s.decay = s.isWillow ? 0.007 + Math.random() * 0.003 : 0.014 + Math.random() * 0.007;
-        s.gravity = s.isWillow ? 0.013 : 0.022;
-        s.drag = s.isWillow ? 0.986 : 0.978;
+        s.r = col[0]; s.g = col[1]; s.b = col[2];
+        s.isWillow = false;
+        s.decay = 0.013 + Math.random() * 0.008;
+        s.gravity = 0.024;
+        s.drag = 0.976;
         s.alpha = 1.0;
+        spawned++;
+      }
+    }
+  }
 
+  // Type B: Nishiki Kamuro (Cascading Golden Willow with weeping tails)
+  spawnNishikiKamuro(x, y, z, colors) {
+    const count = 480;
+    let spawned = 0;
+
+    for (let i = 0; i < this.maxSparks && spawned < count; i++) {
+      const s = this.sparks[i];
+      if (!s.active) {
+        s.active = true;
+        s.x = x; s.y = y; s.z = z;
+
+        const u = Math.random();
+        const v = Math.random();
+        const theta = u * 2.0 * Math.PI;
+        const phi = Math.acos(2.0 * v - 1.0);
+        const speed = 0.28 + Math.random() * 0.42;
+
+        s.vx = speed * Math.sin(phi) * Math.cos(theta);
+        s.vy = Math.abs(speed * Math.sin(phi) * Math.sin(theta)) * 0.8 + 0.1;
+        s.vz = speed * Math.cos(phi);
+
+        s.r = 1.0; s.g = 0.85; s.b = 0.3; // Pure Imperial Gold
+        s.isWillow = true;
+        s.decay = 0.007; // Long-burning hanging embers
+        s.gravity = 0.038;
+        s.drag = 0.985;
+        s.alpha = 1.0;
+        spawned++;
+      }
+    }
+  }
+
+  // Type C: Royal Peacock Fan (Mayur Pankh arch in cyan, emerald & sapphire)
+  spawnPeacockFan(x, y, z) {
+    const count = 350;
+    let spawned = 0;
+    const peacockPalette = [
+      [0.0, 0.96, 0.83], // Turquoise Cyan
+      [0.06, 0.72, 0.5], // Emerald
+      [0.55, 0.36, 0.96], // Royal Sapphire Violet
+      [1.0, 0.84, 0.0]    // Gold
+    ];
+
+    for (let i = 0; i < this.maxSparks && spawned < count; i++) {
+      const s = this.sparks[i];
+      if (!s.active) {
+        s.active = true;
+        s.x = x; s.y = y; s.z = z;
+
+        const fanAngle = -Math.PI * 0.75 + Math.random() * Math.PI * 1.5;
+        const speed = 0.32 + Math.random() * 0.38;
+
+        s.vx = Math.cos(fanAngle) * speed;
+        s.vy = Math.sin(fanAngle) * speed * 0.7 + 0.2;
+        s.vz = (Math.random() - 0.5) * 0.15;
+
+        const col = peacockPalette[Math.floor(Math.random() * peacockPalette.length)];
+        s.r = col[0]; s.g = col[1]; s.b = col[2];
+        s.isWillow = false;
+        s.decay = 0.012;
+        s.gravity = 0.022;
+        s.drag = 0.98;
+        s.alpha = 1.0;
+        spawned++;
+      }
+    }
+  }
+
+  // Type D: Starlight Ring Shell (Expanding circular perimeter ring)
+  spawnRingShell(x, y, z, colors) {
+    const count = 320;
+    let spawned = 0;
+
+    for (let i = 0; i < this.maxSparks && spawned < count; i++) {
+      const s = this.sparks[i];
+      if (!s.active) {
+        s.active = true;
+        s.x = x; s.y = y; s.z = z;
+
+        const angle = (spawned / count) * Math.PI * 2;
+        const speed = 0.52 + (Math.random() - 0.5) * 0.05;
+
+        s.vx = Math.cos(angle) * speed;
+        s.vy = Math.sin(angle) * speed;
+        s.vz = (Math.random() - 0.5) * 0.05;
+
+        const col = colors[spawned % colors.length];
+        s.r = col[0]; s.g = col[1]; s.b = col[2];
+        s.isWillow = false;
+        s.decay = 0.012;
+        s.gravity = 0.022;
+        s.drag = 0.982;
+        s.alpha = 1.0;
+        spawned++;
+      }
+    }
+  }
+
+  // Type E: Lotus Pink & Gold Heart Burst
+  spawnHeartBurst(x, y, z, colors) {
+    const count = 280;
+    let spawned = 0;
+
+    for (let i = 0; i < this.maxSparks && spawned < count; i++) {
+      const s = this.sparks[i];
+      if (!s.active) {
+        s.active = true;
+        s.x = x; s.y = y; s.z = z;
+
+        const t = (spawned / count) * Math.PI * 2;
+        // Parametric Heart Formula
+        const hx = 16 * Math.pow(Math.sin(t), 3);
+        const hy = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+
+        s.vx = (hx / 16) * 0.48;
+        s.vy = (hy / 16) * 0.48;
+        s.vz = (Math.random() - 0.5) * 0.1;
+
+        s.r = 1.0; s.g = 0.35; s.b = 0.65; // Lotus pink
+        s.isWillow = false;
+        s.decay = 0.011;
+        s.gravity = 0.018;
+        s.drag = 0.984;
+        s.alpha = 1.0;
         spawned++;
       }
     }
   }
 
   // ----------------------------------------------------
-  // 6. SCENE TRANSITION CHOREOGRAPHY
+  // 8. SCENE TRANSITION CHOREOGRAPHY & STRICT ISOLATION
   // ----------------------------------------------------
 
   setScene(sceneNum) {
@@ -806,78 +1076,100 @@ export class ThreeMasterWorld {
       ease: 'power3.inOut'
     });
 
-    if (this.rangoliGroup) {
-      this.rangoliGroup.visible = sceneNum === 2;
+    // STRICT SCENE ISOLATION:
+    // Scene 1 Diya is ONLY visible in Scene 1!
+    if (this.diyaGroup) {
+      this.diyaGroup.visible = (sceneNum === 1);
     }
 
+    // Scene 2 Rangoli is ONLY visible in Scene 2!
+    if (this.rangoliGroup) {
+      this.rangoliGroup.visible = (sceneNum === 2);
+    }
+
+    // Scene 3 Garden is ONLY visible in Scene 3!
     if (this.gardenGroup) {
-      this.gardenGroup.visible = sceneNum === 3;
+      this.gardenGroup.visible = (sceneNum === 3);
     }
   }
 
   spawnRipple(x, y, strength = 0.8) {
-    if (this.waterMaterial) {
-      this.waterMaterial.uniforms.rippleTime.value = this.time;
-      this.waterMaterial.uniforms.rippleCenter.value.set(
-        (x / this.width - 0.5) * 16,
-        (1.0 - y / this.height) * 16
-      );
-    }
+    // Interactive trigger for Scene 1
   }
 
   // ----------------------------------------------------
-  // 7. MAIN RENDER LOOP (60/120 FPS LOCKED)
+  // 9. MAIN RENDER LOOP (60/120 FPS LOCKED WITH POST-PROCESSING)
   // ----------------------------------------------------
 
   update(dt) {
     this.time += 0.018 * dt;
 
-    // 1. Organic Flame Flicker & Point Light Breathing
-    const flameFlicker = 0.92 + Math.sin(this.time * 8.0) * 0.14 + Math.cos(this.time * 14.0) * 0.09;
-    if (this.flameMaterial) {
-      this.flameMaterial.uniforms.time.value = this.time;
-      this.flameMaterial.uniforms.flicker.value = flameFlicker;
-    }
-    if (this.waterMaterial) {
-      this.waterMaterial.uniforms.time.value = this.time;
-    }
-    if (this.diyaLight) {
-      this.diyaLight.intensity = 4.8 * flameFlicker;
+    // 1. Organic Flame Flicker & Point Light Breathing (Scene 1 only)
+    if (this.currentScene === 1) {
+      const flameFlicker = 0.92 + Math.sin(this.time * 8.0) * 0.14 + Math.cos(this.time * 14.0) * 0.09;
+      if (this.flameMaterial) {
+        this.flameMaterial.uniforms.time.value = this.time;
+        this.flameMaterial.uniforms.flicker.value = flameFlicker;
+      }
+      if (this.diyaLight) {
+        this.diyaLight.intensity = 5.2 * flameFlicker;
+      }
+
+      // Rising Golden Embers from Diya Flame
+      if (this.diyaEmbers) {
+        const pos = this.diyaEmberPositions;
+        for (let i = 0; i < this.diyaEmberData.length; i++) {
+          const ed = this.diyaEmberData[i];
+          ed.y += ed.speed * dt;
+          const wobble = Math.sin(this.time * 4.0 + ed.wobble) * 0.12;
+
+          pos[i * 3] = 0.68 + wobble;
+          pos[i * 3 + 1] = ed.y;
+          pos[i * 3 + 2] = Math.cos(this.time * 3.5 + ed.wobble) * 0.1;
+
+          if (ed.y > 4.2) {
+            ed.y = 1.68;
+          }
+        }
+        this.diyaEmbersGeo.attributes.position.needsUpdate = true;
+      }
+    } else if (this.diyaLight) {
+      this.diyaLight.intensity = 0.5; // Dimmed when not in Scene 1
     }
 
-    // 2. Rising Golden Embers from the Diya Flame (Scene 1)
-    if (this.currentScene === 1 && this.diyaEmbers) {
-      const pos = this.diyaEmberPositions;
-      for (let i = 0; i < this.diyaEmberData.length; i++) {
-        const ed = this.diyaEmberData[i];
-        ed.y += ed.speed * dt;
-        const wobble = Math.sin(this.time * 4.0 + ed.wobble) * 0.12;
+    // 2. Atmospheric Floating Golden Stardust Motes
+    if (this.stardustPoints) {
+      const pos = this.stardustPositions;
+      for (let i = 0; i < this.stardustData.length; i++) {
+        const sd = this.stardustData[i];
+        pos[i * 3] += sd.vx * dt;
+        pos[i * 3 + 1] += sd.vy * dt;
+        pos[i * 3 + 2] += sd.vz * dt;
 
-        pos[i * 3] = 0.68 + wobble;
-        pos[i * 3 + 1] = ed.y;
-        pos[i * 3 + 2] = Math.cos(this.time * 3.5 + ed.wobble) * 0.1;
-
-        if (ed.y > 4.2) {
-          ed.y = 1.5;
+        if (pos[i * 3 + 1] > 18.0) {
+          pos[i * 3 + 1] = 0.5;
         }
       }
-      this.diyaEmbersGeo.attributes.position.needsUpdate = true;
+      this.stardustGeo.attributes.position.needsUpdate = true;
     }
 
     // 3. Smooth Camera Tracking with Gyroscope & Mouse Tilt
-    const { x: tiltX, y: tiltY } = tilt.getValues();
-    const dynamicTarget = this.cameraTarget.clone().add(new THREE.Vector3(tiltX * 1.6, -tiltY * 1.1, 0));
-    this.currentCameraLookAt.lerp(dynamicTarget, 0.08);
+    this.currentTiltX += (this.targetTiltX - this.currentTiltX) * 0.04 * dt;
+    this.currentTiltY += (this.targetTiltY - this.currentTiltY) * 0.04 * dt;
+
+    this.currentCameraLookAt.x = this.cameraTarget.x + this.currentTiltX * 0.6;
+    this.currentCameraLookAt.y = this.cameraTarget.y + this.currentTiltY * 0.4;
+    this.currentCameraLookAt.z = this.cameraTarget.z;
     this.camera.lookAt(this.currentCameraLookAt);
 
-    // 4. Sky Lanterns & Tumbling Marigold Petals (Scene 3)
+    // 4. Scene 3 Floating Akash Kandil Lanterns & Marigold Petals
     if (this.currentScene === 3 && this.gardenGroup.visible) {
       for (const l of this.lanterns) {
         l.position.y += l.userData.vy * dt;
         l.position.x += Math.sin(this.time * l.userData.swaySpeed + l.userData.seed) * l.userData.swayAmp * 0.02 * dt;
         if (l.position.y > 28) {
           l.position.y = 1.0;
-          l.position.x = (Math.random() - 0.5) * 36;
+          l.position.x = (Math.random() - 0.5) * 42;
         }
       }
 
@@ -886,14 +1178,29 @@ export class ThreeMasterWorld {
         p.position.x += p.userData.vx * dt;
         p.rotation.x += p.userData.vRotX * dt;
         p.rotation.y += p.userData.vRotY * dt;
-        if (p.position.y < -0.2) {
-          p.position.y = 16.0;
-          p.position.x = (Math.random() - 0.5) * 32;
+        if (p.position.y < 0.1) {
+          p.position.y = 18.0;
+          p.position.x = (Math.random() - 0.5) * 35;
         }
       }
     }
 
-    // 5. Nishiki Kamuro Physical Sparks Simulation (Scene 5 Fireworks)
+    // 5. Active Ascending Fireworks Rockets Physics & Detonation Trigger
+    for (const r of this.rockets) {
+      if (r.active) {
+        r.y += r.vy * dt;
+        r.sprite.position.set(r.x, r.y, r.z);
+
+        // Check if rocket reached its detonation ceiling
+        if (r.y >= r.targetY) {
+          r.active = false;
+          r.sprite.visible = false;
+          this.detonateFirework(r.x, r.y, r.z, r.theme, r.type);
+        }
+      }
+    }
+
+    // 6. High-Intensity Physical Fireworks Simulation (Scene 5)
     let needsSparkUpdate = false;
     const pos = this.sparkPositions;
     const col = this.sparkColors;
@@ -912,7 +1219,7 @@ export class ThreeMasterWorld {
 
         s.alpha -= s.decay * dt;
 
-        if (s.alpha <= 0 || s.y < -0.1) {
+        if (s.alpha <= 0 || s.y < 0.1) {
           s.active = false;
           pos[i * 3 + 1] = -999;
           sz[i] = 0;
@@ -926,7 +1233,7 @@ export class ThreeMasterWorld {
           col[i * 3 + 1] = s.g * s.alpha;
           col[i * 3 + 2] = s.b * s.alpha;
 
-          sz[i] = (s.isWillow ? 5.2 : 3.6) * s.alpha;
+          sz[i] = (s.isWillow ? 5.8 : 4.2) * s.alpha;
         }
         needsSparkUpdate = true;
       }
@@ -947,7 +1254,13 @@ export class ThreeMasterWorld {
     const dt = Math.min(Math.max(deltaMs / 16.67, 0.5), 2.0);
 
     this.update(dt);
-    this.renderer.render(this.scene, this.camera);
+    
+    // Render using UnrealBloomPass EffectComposer
+    if (this.composer) {
+      this.composer.render();
+    } else {
+      this.renderer.render(this.scene, this.camera);
+    }
 
     this.rafId = requestAnimationFrame((t) => this.loop(t));
   }
@@ -961,47 +1274,50 @@ export class ThreeMasterWorld {
 
   stop() {
     this.running = false;
-    if (this.rafId) {
-      cancelAnimationFrame(this.rafId);
-      this.rafId = null;
-    }
-  }
-
-  resize() {
-    this.width = window.innerWidth;
-    this.height = window.innerHeight;
-    this.dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-
-    this.camera.aspect = this.width / this.height;
-    this.camera.updateProjectionMatrix();
-
-    this.renderer.setSize(this.width, this.height);
-    this.renderer.setPixelRatio(this.dpr);
+    if (this.rafId) cancelAnimationFrame(this.rafId);
   }
 
   bindEvents() {
-    window.addEventListener('resize', () => this.resize());
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        this.stop();
-      } else {
-        this.start();
+    // Window Resize with Composer update
+    window.addEventListener('resize', () => {
+      this.width = window.innerWidth;
+      this.height = window.innerHeight;
+      this.camera.aspect = this.width / this.height;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(this.width, this.height);
+      if (this.composer) {
+        this.composer.setSize(this.width, this.height);
       }
     });
 
+    // Pointer Parallax
+    window.addEventListener('pointermove', (e) => {
+      this.targetTiltX = (e.clientX / this.width - 0.5) * 1.6;
+      this.targetTiltY = (e.clientY / this.height - 0.5) * 1.2;
+    });
+
+    // Device Gyroscope Parallax on Mobile
+    window.addEventListener('deviceorientation', (e) => {
+      if (e.gamma !== null && e.beta !== null) {
+        this.targetTiltX = (e.gamma / 30) * 1.4;
+        this.targetTiltY = ((e.beta - 45) / 30) * 1.0;
+      }
+    });
+
+    // Touch & pointer interaction for fireworks in Scene 5
     let lastTap = 0;
     window.addEventListener('pointerdown', (e) => {
       const now = performance.now();
-      if (now - lastTap < 80) return;
+      if (now - lastTap < 100) return;
       lastTap = now;
 
-      if (this.currentScene === 1) {
-        this.spawnRipple(e.clientX, e.clientY, 0.8);
-      } else if (this.currentScene === 5 && !e.target.closest('button') && !e.target.closest('input')) {
+      if (this.currentScene === 5 && !e.target.closest('button') && !e.target.closest('input')) {
+        const types = ['chrysanthemum', 'willow', 'peacock', 'ring', 'heart'];
+        const chosenType = types[Math.floor(Math.random() * types.length)];
         const themes = ['gold', 'teal', 'pink', 'violet'];
-        const chosen = themes[Math.floor(Math.random() * themes.length)];
-        this.launchFirework(e.clientX, e.clientY, chosen);
+        const chosenTheme = themes[Math.floor(Math.random() * themes.length)];
+
+        this.launchFirework(e.clientX, e.clientY, chosenTheme, chosenType);
       }
     });
   }

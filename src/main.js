@@ -155,10 +155,10 @@ class ExperienceApp {
         // Launch welcoming celebratory firework barrage
         setTimeout(() => {
           if (this.world) {
-            this.world.launchFirework(0, 22, 'gold');
+            this.world.launchFirework(0, 23, 'gold', 'chrysanthemum');
             setTimeout(() => {
-              this.world.launchFirework(-7, 20, 'teal');
-              this.world.launchFirework(7, 20, 'pink');
+              this.world.launchFirework(-7, 21, 'teal', 'peacock');
+              this.world.launchFirework(7, 21, 'pink', 'heart');
             }, 300);
           }
         }, 350);
@@ -166,10 +166,10 @@ class ExperienceApp {
         // Voice trigger
         voiceTrigger.start(() => {
           if (this.world) {
-            this.world.launchFirework(-6, 22, 'teal');
-            this.world.launchFirework(6, 22, 'pink');
+            this.world.launchFirework(-6, 22, 'teal', 'peacock');
+            this.world.launchFirework(6, 22, 'pink', 'heart');
             setTimeout(() => {
-              this.world.launchFirework(0, 25, 'gold');
+              this.world.launchFirework(0, 25, 'gold', 'willow');
             }, 250);
           }
         });
@@ -250,11 +250,18 @@ class ExperienceApp {
         const theme = btn.getAttribute('data-theme') || 'gold';
         audioSynth.ensureContext();
         if (this.world) {
-          this.world.launchFirework(0, 22, theme);
+          const typeMap = {
+            gold: 'willow',
+            teal: 'peacock',
+            pink: 'heart',
+            violet: 'ring'
+          };
+          const type = typeMap[theme] || 'chrysanthemum';
+          this.world.launchFirework(0, 23, theme, type);
           setTimeout(() => {
-            this.world.launchFirework(-6, 20, theme);
-            this.world.launchFirework(6, 20, theme);
-          }, 200);
+            this.world.launchFirework(-7, 21, theme, 'chrysanthemum');
+            this.world.launchFirework(7, 21, theme, type);
+          }, 220);
         }
       });
     });
@@ -272,13 +279,13 @@ class ExperienceApp {
         
         // Launch grand celebratory fireworks barrage
         if (this.world) {
-          this.world.launchFirework(0, 24, 'gold');
+          this.world.launchFirework(0, 24, 'gold', 'willow');
           setTimeout(() => {
-            this.world.launchFirework(-8, 22, 'teal');
-            this.world.launchFirework(8, 22, 'pink');
+            this.world.launchFirework(-8, 22, 'teal', 'peacock');
+            this.world.launchFirework(8, 22, 'pink', 'heart');
           }, 250);
           setTimeout(() => {
-            this.world.launchFirework(0, 26, 'violet');
+            this.world.launchFirework(0, 26, 'violet', 'ring');
           }, 500);
         }
 
