@@ -291,31 +291,20 @@ html, body {
 }
 
 /* ----------------------------------------------------
-   SCENE 4: TACTILE GOLD FOIL FROSTED LETTER
+   SCENE 4: LUXURY LETTER TO SHRAVYA
    ---------------------------------------------------- */
 
 .luxury-letter-card {
   position: relative;
-  width: min(92vw, 520px);
-  background: rgba(10, 14, 34, 0.65);
-  border: 1px solid rgba(230, 185, 79, 0.35);
-  border-radius: 12px;
-  padding: 38px 32px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(8, 126, 131, 0.2);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  width: min(92vw, 540px);
+  background: rgba(10, 14, 34, 0.72);
+  border: 1px solid rgba(230, 185, 79, 0.4);
+  border-radius: 14px;
+  padding: 42px 34px;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.95), 0 0 40px rgba(230, 185, 79, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   text-align: left;
-  overflow: hidden;
-}
-
-#scratch-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 15;
-  border-radius: 12px;
-  cursor: crosshair;
 }
 
 .letter-salutation {

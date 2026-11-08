@@ -10,7 +10,6 @@ import { haptics } from './interactions/haptics.js';
 import { breathDetector } from './interactions/breath.js';
 import { voiceTrigger } from './interactions/voice.js';
 import { CinematicWorld } from './engines/cinematic-world.js';
-import { ScratchFoilEngine } from './engines/scratch-foil.js';
 import { gsap } from 'gsap';
 
 class ExperienceApp {
@@ -18,11 +17,9 @@ class ExperienceApp {
     this.currentScene = 1;
     this.totalScenes = 5;
 
-    // Canvases
+    // Cinematic Master Canvas
     this.cinematicCanvas = document.getElementById('cinematic-canvas');
-    this.scratchCanvas = document.getElementById('scratch-canvas');
     this.world = null;
-    this.scratchFoil = null;
 
     this.rangoliWishes = [
       { ring: "THE FIRST RING / PEACE", text: "Peace that gently stills every anxious thought." },
@@ -143,18 +140,15 @@ class ExperienceApp {
 
       case 4:
         audioSynth.playStarlightChime(523.25);
-        // Initialize Tactile Gold Foil Scratch Canvas
-        setTimeout(() => {
-          if (!this.scratchFoil && this.scratchCanvas) {
-            this.scratchFoil = new ScratchFoilEngine(this.scratchCanvas, () => {
-              audioSynth.playSealBreak();
-              haptics.sealBroken();
-            });
-          } else if (this.scratchFoil) {
-            this.scratchFoil.resize();
-            this.scratchFoil.drawGoldFoil();
-          }
-        }, 120);
+        haptics.lightTap();
+        // Subtle luxurious focus on the letter
+        const letterCard = document.querySelector('.luxury-letter-card');
+        if (letterCard) {
+          gsap.fromTo(letterCard, 
+            { scale: 0.96, opacity: 0.8 }, 
+            { scale: 1, opacity: 1, duration: 0.8, ease: 'power2.out' }
+          );
+        }
         break;
 
       case 5:
