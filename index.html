@@ -5,24 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>A Thousand Lights, One Beautiful Wish — For Dharji Shravya</title>
   <meta name="description" content="A cinematic, photorealistic Diwali experience crafted for Dharji Shravya.">
-  <meta name="theme-color" content="#060918">
+  <meta name="theme-color" content="#050713">
   <link rel="stylesheet" href="./src/styles/main.css">
 </head>
 <body>
-  <!-- Cinematic Photographic Environments -->
-  <div id="cinematic-backgrounds">
-    <div class="cinematic-bg-layer active" id="bg-1" style="background-image: url('/assets/scene1-diya.jpg');"></div>
-    <div class="cinematic-bg-layer" id="bg-2" style="background-image: url('/assets/scene2-rangoli.jpg');"></div>
-    <div class="cinematic-bg-layer" id="bg-3" style="background-image: url('/assets/scene3-garden.jpg');"></div>
-    <div class="cinematic-bg-layer" id="bg-4" style="background-image: url('/assets/scene4-stationery.jpg');"></div>
-    <div class="cinematic-bg-layer" id="bg-5" style="background-image: url('/assets/scene5-sky.jpg');"></div>
+  <!-- Multi-Plane 3D Parallax Environment Layers -->
+  <div id="parallax-environment">
+    <div class="parallax-plane bg-sky" id="env-sky"></div>
+    <div class="parallax-plane bg-architecture active" id="env-architecture"></div>
+    <div class="parallax-plane bg-ambient" id="env-ambient"></div>
   </div>
 
-  <!-- Atmospheric Lighting & Vignette Mask -->
-  <div id="cinematic-vignette"></div>
+  <!-- Dynamic Volumetric Light & Pyrotechnic Canvas -->
+  <canvas id="cinematic-canvas"></canvas>
 
-  <!-- Hardware-Accelerated Dynamic FX Canvas -->
-  <canvas id="fx-canvas"></canvas>
+  <!-- Atmospheric Depth & Vignette Mask -->
+  <div id="cinematic-vignette"></div>
 
   <!-- Top Minimalist Luxury Bar (Zero Emojis) -->
   <header id="top-bar">
@@ -41,7 +39,7 @@
       <p class="wish-quote">
         "On a night filled with a thousand lights,<br>may a little extra brightness find its way to you."
       </p>
-      <p class="scene-subtitle">TOUCH SCREEN OR TAP BELOW TO AWAKEN</p>
+      <p class="scene-subtitle">TOUCH WATER TO RIPPLE / BLOW OR TAP TO AWAKEN</p>
       <button class="luxury-action-btn" data-next="2">AWAKEN THE NIGHT</button>
     </section>
 
@@ -76,9 +74,10 @@
       <button class="luxury-action-btn" data-next="4">READ HER WISH</button>
     </section>
 
-    <!-- Scene 04: The Wish That Stays (The Letter) -->
+    <!-- Scene 04: The Wish That Stays (Tactile Scratch Letter) -->
     <section id="scene-4" class="scene-view">
       <div class="luxury-letter-card">
+        <canvas id="scratch-canvas"></canvas>
         <h2 class="letter-salutation">Dear Shravya,</h2>
         <p class="letter-paragraph">
           Diwali has always been about the quiet lights we bring into each other’s lives. Thinking back on this year, having you as a friend has been one of its most genuine and comforting blessings.

@@ -1,6 +1,7 @@
 /**
  * Master Experience Orchestrator — "A Thousand Lights, One Beautiful Wish"
- * Dedicated to Dharji Shravya — Zero Emojis, Pure Cinema, 60/120 FPS
+ * Cinematic Photorealistic Living World & Tactile Gold Foil Scratch System
+ * Dedicated to Dharji Shravya — Zero Emojis, Locked 60/120 FPS
  */
 
 import { audioSynth } from './engines/audio-synth.js';
@@ -8,16 +9,19 @@ import { memory } from './engines/storage.js';
 import { haptics } from './interactions/haptics.js';
 import { breathDetector } from './interactions/breath.js';
 import { voiceTrigger } from './interactions/voice.js';
-import { CinematicEngine } from './engines/cinematic-engine.js';
+import { CinematicWorld } from './engines/cinematic-world.js';
+import { ScratchFoilEngine } from './engines/scratch-foil.js';
 
 class ExperienceApp {
   constructor() {
     this.currentScene = 1;
     this.totalScenes = 5;
 
-    // Master FX Canvas
-    this.canvas = document.getElementById('fx-canvas');
-    this.engine = null;
+    // Canvases
+    this.cinematicCanvas = document.getElementById('cinematic-canvas');
+    this.scratchCanvas = document.getElementById('scratch-canvas');
+    this.world = null;
+    this.scratchFoil = null;
 
     this.rangoliWishes = [
       { ring: "THE FIRST RING / PEACE", text: "Peace that gently stills every anxious thought." },
@@ -34,16 +38,21 @@ class ExperienceApp {
   }
 
   init() {
-    // 1. Initialize Cinematic FX Engine
-    this.engine = new CinematicEngine(this.canvas);
-    this.engine.start();
+    // 1. Initialize Master Cinematic Simulation World
+    if (this.cinematicCanvas) {
+      this.world = new CinematicWorld(this.cinematicCanvas);
+      this.world.start();
+    }
 
     // 2. Bind DOM Events
     this.bindEvents();
     this.renderSavedWishes();
 
-    // 3. Breath detection on Scene 1
+    // 3. Breath Detection on Scene 1
     breathDetector.start(() => {
+      if (this.world) {
+        this.world.spawnRipple(window.innerWidth / 2, window.innerHeight * 0.65, 0.85);
+      }
       audioSynth.ensureContext();
       audioSynth.playIgnition();
       audioSynth.startAmbientDrone();
@@ -55,29 +64,24 @@ class ExperienceApp {
   goToScene(target) {
     if (target < 1 || target > this.totalScenes) return;
 
-    // 1. Transition DOM Scene Views
+    // Transition DOM Views
     const prevEl = document.getElementById(`scene-${this.currentScene}`);
     if (prevEl) prevEl.classList.remove('active');
-
-    // 2. Transition Cinematic Backgrounds
-    const prevBg = document.getElementById(`bg-${this.currentScene}`);
-    if (prevBg) prevBg.classList.remove('active');
 
     this.currentScene = target;
 
     const nextEl = document.getElementById(`scene-${this.currentScene}`);
     if (nextEl) nextEl.classList.add('active');
 
-    const nextBg = document.getElementById(`bg-${this.currentScene}`);
-    if (nextBg) nextBg.classList.add('active');
-
-    // 3. Update Progress Pills
+    // Update Progress Navigation
     document.querySelectorAll('#scene-progress-bar .scene-step-pill').forEach((pill, idx) => {
       pill.classList.toggle('active', idx + 1 === this.currentScene);
     });
 
-    // 4. Notify Engine
-    this.engine.setScene(target);
+    // Notify Cinematic World Engine
+    if (this.world) {
+      this.world.setScene(target);
+    }
 
     audioSynth.ensureContext();
     haptics.lightTap();
@@ -99,7 +103,6 @@ class ExperienceApp {
       case 2:
         audioSynth.startAmbientDrone();
         audioSynth.playStarlightChime(587.33);
-        // Automatically cycle through the 5 rings of wishes
         this.rangoliIndex = 0;
         this.updateRangoliWish(0);
         this.rangoliInterval = setInterval(() => {
@@ -114,18 +117,34 @@ class ExperienceApp {
 
       case 4:
         audioSynth.playStarlightChime(523.25);
+        // Initialize Tactile Gold Foil Scratch Canvas
+        setTimeout(() => {
+          if (!this.scratchFoil && this.scratchCanvas) {
+            this.scratchFoil = new ScratchFoilEngine(this.scratchCanvas, () => {
+              audioSynth.playSealBreak();
+              haptics.sealBroken();
+            });
+          } else if (this.scratchFoil) {
+            this.scratchFoil.resize();
+            this.scratchFoil.drawGoldFoil();
+          }
+        }, 120);
         break;
 
       case 5:
         // Launch welcoming celebratory firework
         setTimeout(() => {
-          this.engine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.28, 'gold');
+          if (this.world) {
+            this.world.launchFirework(window.innerWidth * 0.5, window.innerHeight * 0.28, 'gold');
+          }
         }, 400);
 
         // Voice trigger
         voiceTrigger.start(() => {
-          this.engine.launchRocket(window.innerWidth * 0.35, window.innerHeight * 0.26, 'teal');
-          this.engine.launchRocket(window.innerWidth * 0.65, window.innerHeight * 0.26, 'pink');
+          if (this.world) {
+            this.world.launchFirework(window.innerWidth * 0.35, window.innerHeight * 0.26, 'teal');
+            this.world.launchFirework(window.innerWidth * 0.65, window.innerHeight * 0.26, 'pink');
+          }
         });
         break;
     }
@@ -164,6 +183,11 @@ class ExperienceApp {
   }
 
   bindEvents() {
+    // 0. Ensure audio unlocks on first user touch anywhere
+    window.addEventListener('pointerdown', () => {
+      audioSynth.ensureContext();
+    }, { once: true });
+
     // 1. Scene Navigation Buttons
     document.querySelectorAll('.luxury-action-btn[data-next]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -198,7 +222,9 @@ class ExperienceApp {
       btn.addEventListener('click', () => {
         const theme = btn.getAttribute('data-theme') || 'gold';
         audioSynth.ensureContext();
-        this.engine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.28, theme);
+        if (this.world) {
+          this.world.launchFirework(window.innerWidth * 0.5, window.innerHeight * 0.28, theme);
+        }
       });
     });
 
@@ -214,11 +240,13 @@ class ExperienceApp {
         this.renderSavedWishes();
         
         // Launch celebratory fireworks
-        this.engine.launchRocket(window.innerWidth * 0.5, window.innerHeight * 0.26, 'gold');
-        setTimeout(() => {
-          this.engine.launchRocket(window.innerWidth * 0.35, window.innerHeight * 0.3, 'teal');
-          this.engine.launchRocket(window.innerWidth * 0.65, window.innerHeight * 0.3, 'pink');
-        }, 250);
+        if (this.world) {
+          this.world.launchFirework(window.innerWidth * 0.5, window.innerHeight * 0.26, 'gold');
+          setTimeout(() => {
+            this.world.launchFirework(window.innerWidth * 0.35, window.innerHeight * 0.3, 'teal');
+            this.world.launchFirework(window.innerWidth * 0.65, window.innerHeight * 0.3, 'pink');
+          }, 250);
+        }
 
         audioSynth.playStarlightChime(880);
         haptics.sealBroken();

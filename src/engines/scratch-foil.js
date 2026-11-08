@@ -1,6 +1,6 @@
 /**
- * ScratchFoil Engine — Shimmering gold foil scratch-to-reveal canvas
- * Allows Dharji Shravya to scratch away the golden veil to reveal the letter.
+ * ScratchFoilEngine — Tactile 24K Gold Foil Scratch-to-Reveal System (Scene 4)
+ * Allows Dharji Shravya to physically scratch off the shimmering gold foil veil.
  */
 
 import { haptics } from '../interactions/haptics.js';
@@ -13,7 +13,6 @@ export class ScratchFoilEngine {
     this.isRevealed = false;
     this.isDrawing = false;
     this.lastPoint = null;
-    this.clearedCheckTimer = null;
 
     this.init();
   }
@@ -26,6 +25,7 @@ export class ScratchFoilEngine {
 
   resize() {
     const rect = this.canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
     this.canvas.width = rect.width;
     this.canvas.height = rect.height;
     this.width = this.canvas.width;
@@ -34,29 +34,31 @@ export class ScratchFoilEngine {
 
   drawGoldFoil() {
     this.ctx.globalCompositeOperation = 'source-over';
-    
-    // Metallic gold gradient
+
+    // 24K Metallic Gold Leaf Gradient
     const grad = this.ctx.createLinearGradient(0, 0, this.width, this.height);
-    grad.addColorStop(0, '#d4af37');
-    grad.addColorStop(0.25, '#fef08a');
-    grad.addColorStop(0.5, '#b45309');
-    grad.addColorStop(0.75, '#fde047');
-    grad.addColorStop(1, '#92400e');
+    grad.addColorStop(0, '#c59b27');
+    grad.addColorStop(0.2, '#f5d77f');
+    grad.addColorStop(0.4, '#b38728');
+    grad.addColorStop(0.6, '#fbf5b7');
+    grad.addColorStop(0.8, '#aa771c');
+    grad.addColorStop(1, '#926014');
 
     this.ctx.fillStyle = grad;
     this.ctx.fillRect(0, 0, this.width, this.height);
 
-    // Subtle decorative pattern overlay
-    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-    this.ctx.font = '600 13px "Cinzel Decorative", serif';
+    // Subtle Gold Stamping Pattern
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+    this.ctx.font = '600 11.5px "Montserrat", sans-serif';
+    this.ctx.letterSpacing = '3px';
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
-    this.ctx.fillText("✨ GENTLY SCRATCH TO REVEAL ✨", this.width / 2, this.height / 2);
+    this.ctx.fillText("SCRATCH GENTLY TO REVEAL", this.width / 2, this.height / 2);
 
-    // Golden border
-    this.ctx.strokeStyle = '#ffd700';
-    this.ctx.lineWidth = 3;
-    this.ctx.strokeRect(4, 4, this.width - 8, this.height - 8);
+    // Delicate Filigree Border
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    this.ctx.lineWidth = 1.5;
+    this.ctx.strokeRect(6, 6, this.width - 12, this.height - 12);
   }
 
   bindEvents() {
@@ -103,11 +105,11 @@ export class ScratchFoilEngine {
   scratch(x, y) {
     this.ctx.globalCompositeOperation = 'destination-out';
     this.ctx.beginPath();
-    this.ctx.arc(x, y, 22, 0, Math.PI * 2);
+    this.ctx.arc(x, y, 24, 0, Math.PI * 2);
     this.ctx.fill();
 
     if (this.lastPoint) {
-      this.ctx.lineWidth = 44;
+      this.ctx.lineWidth = 48;
       this.ctx.lineCap = 'round';
       this.ctx.beginPath();
       this.ctx.moveTo(this.lastPoint.x, this.lastPoint.y);
@@ -125,18 +127,16 @@ export class ScratchFoilEngine {
       const imgData = this.ctx.getImageData(0, 0, this.width, this.height);
       const pixels = imgData.data;
       let transparentCount = 0;
-      const step = 32; // Sample every 32nd pixel for speed
+      const step = 28;
 
       for (let i = 3; i < pixels.length; i += step * 4) {
-        if (pixels[i] === 0) {
-          transparentCount++;
-        }
+        if (pixels[i] === 0) transparentCount++;
       }
 
       const totalSampled = pixels.length / (step * 4);
       const ratio = transparentCount / totalSampled;
 
-      if (ratio > 0.42) {
+      if (ratio > 0.38) {
         this.isRevealed = true;
         this.canvas.style.transition = 'opacity 0.8s ease-out';
         this.canvas.style.opacity = '0';
@@ -146,7 +146,6 @@ export class ScratchFoilEngine {
         }, 800);
       }
     } catch (e) {
-      // Fallback
       this.isRevealed = true;
       if (this.onRevealed) this.onRevealed();
     }
